@@ -59,6 +59,7 @@ class Product(TimeStampedModel):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="products")
     image = models.ImageField(upload_to="products/images/", blank=True)
     is_active = models.BooleanField(default=True)
+    stock = models.PositiveIntegerField(default=0)
 
     objects = ProductQuerySet.as_manager()
 
