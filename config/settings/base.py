@@ -1,15 +1,15 @@
 from datetime import timedelta
 from pathlib import Path
 import environ
-
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-env = environ.Env()
+env = environ.Env(DEBUG=(bool, False))
 environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("SECRET_KEY", default="dev-only-secret-change-me")
-DEBUG = env("DEBUG")
+DEBUG = env.bool("DEBUG", default=False)
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
 INSTALLED_APPS = [
@@ -22,13 +22,13 @@ INSTALLED_APPS = [
     # third-party
     "rest_framework",
     "django_filters",
-  #  "drf_spectacular",
+    "drf_spectacular",
     "rest_framework_simplejwt.token_blacklist",
     # local apps
- #   "users",
+    "users",
     "products",
- #   "orders",
-#    "reviews",
+    "orders",
+    "reviews",
 ]
 
 MIDDLEWARE = [
@@ -63,10 +63,18 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
-    "default": env.db("DATABASE_URL")
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "myshop_db",
+        "USER": "postgres",
+        "PASSWORD": "225363",
+        "HOST": "127.0.0.1",
+        "PORT": "5432",
+    }
 }
-#AUTH_USER_MODEL = "users.User"
 
+
+AUTH_USER_MODEL = "users.User"
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},

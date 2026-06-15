@@ -1,8 +1,16 @@
 from django.views.generic import DetailView
 from django_filters.views import FilterView
+from rest_framework.viewsets import ModelViewSet
+from.serializers import ProductSerializer
 
 from .filters import ProductFilter
 from .models import Product, Category
+
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.active().with_rating().with_popularity()
+    serializer_class = ProductSerializer
+    filterset_class = ProductFilter
+
 
 class ProductListView(FilterView):
     model = Product
