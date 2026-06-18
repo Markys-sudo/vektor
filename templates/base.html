@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Vektor{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+
+    
+<header>
+    <div class="header-container">
+        <a href="{% url 'home' %}" class="header__logo">
+            <img src="{% static 'img/logo.svg' %}" alt="Logo">
+            <p class="logo-text">Vektor</p>
+        </a>
+
+        <nav class="header__nav">
+            <ul>
+                <li><a href="{% url 'products:product_list' %}">Products</a></li>
+                <li><a href="guides-recipes.html">Guides &amp; Recipes</a></li>
+                <li><a href="#">Community</a></li>
+                <li><a href="#">Resources</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+
+        {% if request.user.is_authenticated %}
+            <div class="header__user-actions">
+                <a href="{% url 'users:profile' %}">
+                    <i class="fa-solid fa-user"></i>
+                </a>
+            </div>
+        {% else %}
+            <div class="header__auth-buttons">
+                <a href="{% url 'accounts:login' %}" class="button button--secondary">
+                    Login
+                </a>
+                <a href="{% url 'accounts:register' %}" class="button button--primary">
+                    Register
+                </a>
+            </div>
+        {% endif %}
+
+    </div>
+</header>
+
+{% block content %}
+{% endblock %}
+
+<footer>
+    <p>© {{ now|date:"Y" }} Vektor</p>
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+
+</body>
+</html>

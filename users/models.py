@@ -8,5 +8,5 @@ class User(AbstractUser):
         blank=True,
         unique=True
     )
-    telegram_username = models.CharField(max_length=255)
-    phone = models.CharField(max_length=20)
+    telegram_username = models.CharField(max_length=255, null=True, blank=True)
+    phone = models.CharField(max_length=20, null=True, blank=True)

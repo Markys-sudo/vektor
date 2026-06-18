@@ -23,6 +23,6 @@ class ProductAdmin(admin.ModelAdmin):
         # Annotation powers a sortable "ordered N times" column → top products.
         return super().get_queryset(request).annotate(_ordered=Count("order_items"))
 
-    @admin.display(description="Замовлено разів", ordering="_ordered")
+    @admin.display(description="Заказан раз", ordering="_ordered")
     def ordered_count(self, obj):
         return obj._ordered
