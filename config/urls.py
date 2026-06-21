@@ -20,16 +20,20 @@ from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from products.views import ProductListView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', ProductListView.as_view(), name='home'),
     path('products/', include('products.urls', namespace='products')),
+    path('accounts/', include('users.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='api-docs'),
-    path("accounts/", include("users.urls")),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path("api/auth/", include("users.api_urls")),   # Authentication API
+    path("api/", include("products.api_urls")),        # API
 ]
 
 

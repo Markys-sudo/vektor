@@ -1,7 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+    const isProductsPage = document.querySelector(".product-grid");
+
+    // 🔥 якщо це не сторінка товарів — виходимо
+    if (!isProductsPage) return;
+
     const params = new URLSearchParams(window.location.search);
 
+    // ❗ краще не перевантажувати сторінку одразу через string concat
     const apply = () => {
         window.location.search = params.toString();
     };
@@ -27,13 +33,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             cats.forEach(c => params.append("category", c));
 
-            params.delete("page"); // reset pagination
+            params.delete("page");
 
             apply();
         });
 
     });
-
 
     // =========================
     // SORT
@@ -42,15 +47,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         btn.addEventListener("click", () => {
 
-            params.set("sort", btn.dataset.sort);
+            const sortValue = btn.dataset.sort;
+
+            if (!sortValue) return;
+
+            params.set("sort", sortValue);
             params.delete("page");
 
             apply();
-
         });
 
     });
-
 
     // =========================
     // SEARCH
@@ -60,7 +67,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (searchBtn) {
         searchBtn.addEventListener("click", () => {
 
-            const q = document.querySelector('input[name="q"]').value;
+            const input = document.querySelector('input[name="q"]');
+
+            if (!input) return;
+
+            const q = input.value.trim();
 
             if (q) params.set("q", q);
             else params.delete("q");
@@ -71,22 +82,23 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-
     // =========================
-    // KEYWORDS REMOVE (X)
+    // KEYWORDS REMOVE
     // =========================
     document.querySelectorAll(".remove-keyword-icon").forEach(icon => {
 
         icon.addEventListener("click", () => {
 
-            const slug = icon.parentElement.dataset.keyword;
+            const parent = icon.closest(".keyword-tag");
+            if (!parent) return;
+
+            const slug = parent.dataset.keyword;
 
             let cats = params.getAll("category");
 
             cats = cats.filter(c => c !== slug);
 
             params.delete("category");
-
             cats.forEach(c => params.append("category", c));
 
             params.delete("page");
@@ -96,9 +108,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     });
 
-
     // =========================
-    // SORT ACTIVE HIGHLIGHT
+    // SORT ACTIVE
     // =========================
     const currentSort = params.get("sort");
 

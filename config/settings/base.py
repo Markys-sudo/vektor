@@ -140,7 +140,7 @@ LOGGING = {
 }
 
 
-LOGIN_URL = "users:login"
+LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
