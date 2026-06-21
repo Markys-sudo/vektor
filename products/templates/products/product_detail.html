@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<main class="page-product">
+    <div class="container">
+        <!-- Product Info Section -->
+
+        <section class="product-details-section">
+            <!-- IMAGE -->
+            <div class="product-image-container">
+
+                {% if product.image %}
+                    <img src="{{ product.image.url }}"
+                        alt="{{ product.name }}"
+                        class="product-image">
+                {% else %}
+                    <img src="{% static 'img/no-image.jpg' %}"
+                        alt="{{ product.name }}"
+                        class="product-image">
+                {% endif %}
+
+            </div>
+
+            <!-- INFO -->
+            <div class="product-info-column">
+
+                <div class="product-title-price">
+
+                <h1 class="product-name">{{ product.name }}</h1>
+
+                <div class="price-section">
+                    <span class="price-tag">per 100g</span>
+                    <p class="product-price">${{ product.price }}</p>
+                </div>
+
+            </div>
+
+
+    <!-- DESCRIPTION -->
+    <div class="product-description">
+      {{ product.description|linebreaks }}
+    </div>
+
+
+    <!-- CART -->
+    <div class="cart-controls">
+
+      <button class="button button--primary add-to-cart-button" id="add-to-cart-btn">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span>Add to Cart</span>
+      </button>
+
+      <div class="quantity-counter is-hidden" id="quantity-counter">
+        <button class="quantity-btn" data-action="decrease">
+          <i class="fa-solid fa-minus"></i>
+        </button>
+
+        <span class="quantity-value">1 in cart</span>
+
+        <button class="quantity-btn" data-action="increase">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- 💥 REVIEWS OUTSIDE PRODUCT SECTION -->
+<section class="reviews-section">
+
+    <h2>Reviews</h2>
+
+    {% if can_review %}
+        <form method="post" class="review-form">
+            {% csrf_token %}
+
+            {{ review_form.rating }}
+            {{ review_form.comment }}
+
+            <button type="submit">Submit review</button>
+        </form>
+    {% endif %}
+
+
+    <div class="reviews-list">
+
+        {% for review in reviews %}
+
+            <div class="review-card">
+
+                <h3>{{ review.user.username }}</h3>
+
+                <p class="review-rating">
+                    Rating: {{ review.rating }}/5
+                </p>
+
+                <p class="review-comment">
+                    {{ review.comment }}
+                </p>
+
+            </div>
+
+        {% empty %}
+            <p>No reviews yet</p>
+        {% endfor %}
+
+    </div>
+
+</section>
+</main>
+
+{% endblock %}

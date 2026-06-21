@@ -15,6 +15,15 @@ class Review(models.Model):
     rating = models.PositiveIntegerField()
     comment = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["product", "user"],
+                name="uniq_product_user_review"
+            )
+        ]
+        
 
     def __str__(self):
         return f"Review for {self.product.name} - Rating: {self.rating}"
