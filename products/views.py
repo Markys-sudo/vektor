@@ -10,7 +10,7 @@ class ProductListView(FilterView):
     filterset_class = ProductFilter
     template_name = "products/product_list.html"
     context_object_name = "products"
-    paginate_by = 12
+    paginate_by = 6
 
     def get_queryset(self):
         return (
@@ -23,7 +23,10 @@ class ProductListView(FilterView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        
         ctx["categories"] = Category.objects.all()
+        
+        ctx["selected_categories"] = self.request.GET.getlist("category")
         return ctx
 
 

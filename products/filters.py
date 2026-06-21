@@ -9,9 +9,10 @@ class ProductFilter(django_filters.FilterSet):
     
     category = django_filters.ModelMultipleChoiceFilter(
         queryset=Category.objects.all(),
-        field_name="category",
-        label="Категория",
+        field_name="category__slug",
         to_field_name="slug",
+        label="Категория",
+        
     )
     min_price = django_filters.NumberFilter(field_name="price", lookup_expr="gte", label="Цена от")
     max_price = django_filters.NumberFilter(field_name="price", lookup_expr="lte", label="Цена до")
