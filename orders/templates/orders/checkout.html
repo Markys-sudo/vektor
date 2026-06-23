@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Order Details | Hop &amp; Barley{% endblock %}
+{% block content %}
+<main class="checkout-page-wrapper">
+  <div class="checkout-container">
+    <h1 class="checkout-title">Order Details</h1>
+    {% if form.errors %}<ul class="messages">{% for field, errs in form.errors.items %}{% for e in errs %}<li class="message message--error">{{ e }}</li>{% endfor %}{% endfor %}</ul>{% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <section class="checkout-section">
+        <h2 class="checkout-section__title">Shipping information</h2>
+        <div class="checkout-form-group"><label for="full-name">Full Name</label><input type="text" id="full-name" name="full_name" class="Input" value="{{ form.full_name.value|default:'' }}" required></div>
+        <div class="checkout-form-group"><label for="phone">Phone number</label><input type="tel" id="phone" name="phone" class="Input" value="{{ form.phone.value|default:'' }}" required></div>
+        <div class="checkout-form-group"><label for="city">City</label><input type="text" id="city" name="city" class="Input" value="{{ form.city.value|default:'' }}" required></div>
+        <div class="checkout-form-group"><label for="address">Shipping address</label><textarea id="address" name="address" class="Textarea" rows="3" required>{{ form.address.value|default:'' }}</textarea></div>
+      </section>
+      <section class="checkout-section">
+        <h2 class="checkout-section__title">Payment Method</h2>
+        <div class="payment-options">
+          <label class="radio-option"><input type="radio" name="payment_method" value="debit" {% if form.payment_method.value == 'debit' or not form.payment_method.value %}checked{% endif %}><span class="radio-custom"></span><span class="radio-label">Debit Card</span></label>
+          <label class="radio-option"><input type="radio" name="payment_method" value="wallet" {% if form.payment_method.value == 'wallet' %}checked{% endif %}><span class="radio-custom"></span><span class="radio-label">Digital Wallet</span></label>
+          <label class="radio-option"><input type="radio" name="payment_method" value="cod" {% if form.payment_method.value == 'cod' %}checked{% endif %}><span class="radio-custom"></span><span class="radio-label">Cash On Delivery</span></label>
+        </div>
+      </section>
+      <section class="checkout-summary">
+        <h2 class="checkout-section__title">Order Summary</h2>
+        <div class="summary-details">
+          <div class="summary-total"><p>Total</p><p>${{ cart.total }}</p></div>
+          <button type="submit" class="button button--primary button--pay">Pay</button>
+        </div>
+      </section>
+    </form>
+  </div>
+</main>
+{% endblock %}

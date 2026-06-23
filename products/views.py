@@ -43,12 +43,29 @@ class ProductDetailView(DetailView):
         )
 
     def get_context_data(self, **kwargs):
-        # Local imports avoid any cross-app import cycle at module load.
         from reviews.forms import ReviewForm
         from reviews.services import has_purchased
+        from orders.cart import Cart
 
         ctx = super().get_context_data(**kwargs)
+
         user = self.request.user
-        ctx["can_review"] = user.is_authenticated and has_purchased(user, self.object)
+
+        ctx["can_review"] = (
+            user.is_authenticated 
+            and has_purchased(user, self.object)
+        )
+
         ctx["review_form"] = ReviewForm()
+
+
+        # CART
+        cart = Cart(self.request)
+
+        ctx["cart_quantity"] = cart.cart.get(
+            str(self.object.id),
+            0
+        )
+
+
         return ctx

@@ -46,10 +46,25 @@
     <!-- CART -->
     <div class="cart-controls">
 
-      <button class="button button--primary add-to-cart-button" id="add-to-cart-btn">
+    <form 
+        action="{% url 'orders:cart_add' product.id %}" 
+        method="post">
+
+        {% csrf_token %}
+
+<form action="{% url 'orders:cart_add' product.id %}" method="post">
+    {% csrf_token %}
+    <button class="button button--primary add-to-cart-button"type="submit">
         <i class="fa-solid fa-cart-shopping"></i>
-        <span>Add to Cart</span>
-      </button>
+            <span>
+                {% if cart_quantity %}
+                {{ cart_quantity }} in cart
+                {% else %}
+                Add to Cart
+                {% endif %}
+            </span>
+    </button>
+</form>
 
       <div class="quantity-counter is-hidden" id="quantity-counter">
         <button class="quantity-btn" data-action="decrease">

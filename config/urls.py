@@ -28,14 +28,16 @@ urlpatterns = [
     path('', ProductListView.as_view(), name='home'),
     path('products/', include('products.urls', namespace='products')),
     path('accounts/', include('users.urls')),
+    path('orders/', include('orders.urls', namespace='orders')),
+    
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='api-docs'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path("api/auth/", include("users.api_urls")),   # Authentication API
     path("api/", include("products.api_urls")),        # API
+    path("api/", include("orders.api_urls")),          # API
 ]
 
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

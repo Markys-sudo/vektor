@@ -47,6 +47,8 @@ class CheckoutView(LoginRequiredMixin, View):
         return render(request, self.template_name, {"cart": cart, "form": CheckoutForm()})
 
     def post(self, request):
+        print("POST CHECKOUT")
+        print(request.POST)
         cart = Cart(request)
         if len(cart) == 0:
             return redirect("orders:cart_detail")

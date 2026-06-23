@@ -38,7 +38,8 @@ class Cart:
         self.save()
 
     def save(self):
-        self.session.modified = True
+        self.session[CART_SESSION_KEY] = self.cart
+        self.session.modified = True 
 
     def __iter__(self):
         products = Product.objects.filter(id__in=self.cart.keys())

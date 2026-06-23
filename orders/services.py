@@ -1,16 +1,19 @@
-
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 
 from django.db import transaction
 
 from products.models import Product
+from users.models import User
 
 from .exceptions import OutOfStockError
 from .models import Order, OrderItem
 from .tasks import send_order_confirmation
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -20,14 +23,7 @@ class CartLine:
 
 
 @transaction.atomic
-def create_order(*, user, lines: list[CartLine], shipping_address: str) -> Order:
-    """Create an order atomically from cart lines.
-
-    Locks the involved product rows (``select_for_update``) so concurrent
-    checkouts cannot oversell, re-checks stock, snapshots prices into the order
-    items, decrements stock, and schedules a confirmation email only after the
-    transaction commits.
-    """
+def create_order(*, user: User, lines: list[CartLine], shipping_address: str) -> Order:
     if not lines:
         raise ValueError("Cannot create an order with no items.")
 
@@ -45,7 +41,13 @@ def create_order(*, user, lines: list[CartLine], shipping_address: str) -> Order
         if product is None:
             raise OutOfStockError(f"Товар {line.product_id} недоступен.")
         if line.quantity > product.stock:
-            raise OutOfStockError(f"Недостаточно остатка для «{product.name}».")
+            logger.warning(
+                "oversell_blocked product=%s requested=%s available=%s",
+                product.id,
+                line.quantity,
+                product.stock,
+            )
+            raise OutOfStockError(f"Недостатньо остатку для «{product.name}».")
 
         OrderItem.objects.create(
             order=order, product=product, quantity=line.quantity, price=product.price
@@ -56,6 +58,19 @@ def create_order(*, user, lines: list[CartLine], shipping_address: str) -> Order
 
     order.total_price = total
     order.save(update_fields=["total_price"])
+    logger.info(
+        "order_created id=%s user=%s items=%s total=%s", order.pk, user.pk, len(lines), total
+    )
 
     transaction.on_commit(lambda: send_order_confirmation.delay(order.id))
+    return order
+
+@transaction.atomic
+def mark_paid(order: Order) -> Order:
+    order = Order.objects.select_for_update().get(pk=order.pk)
+    """Mock payment success: flip a pending order to paid."""
+    if order.status == Order.Status.PENDING:
+        order.status = Order.Status.PAID
+        order.save(update_fields=["status"])
+        logger.info("order_paid id=%s", order.pk)
     return order

@@ -11,3 +11,5 @@ migrations/
 .vs/
 *.log
 *.pot   
+.cmd
+.*

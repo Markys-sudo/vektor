@@ -2,8 +2,20 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.views import View
-
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView
+from orders.models import Order
 from .models import User
+
+class OrderHistoryView(LoginRequiredMixin, TemplateView):
+    template_name = "users/order_history.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["orders"] = Order.objects.filter(user=self.request.user).order_by("-created_at")
+        return context
+
+
 
 class RegisterView(View):
     def get(self, request):

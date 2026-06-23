@@ -54,13 +54,21 @@
                          alt="User Account">
                 </a>
 
-
-                <a href="#" 
+                <a href="{% url 'orders:cart_detail' %}"
                    class="cart-icon"
                    aria-label="Shopping Cart">
 
-                    <img src="{% static 'img/icons/Shopping_bag.svg' %}" 
+                <img src="{% static 'img/icons/Shopping_bag.svg' %}" 
                          alt="Shopping Cart">
+                </a>
+                
+                <a href="{% url 'accounts:logout' %}" 
+                class="logout-icon"
+                aria-label="Logout">
+                    <img src="{% static 'img/icons/Logout.svg' %}" 
+                        alt="Logout"
+                        width="40"
+                        height="40">
                 </a>
 
             </div>
