@@ -3,6 +3,7 @@ from django_filters.views import FilterView
 
 from .filters import ProductFilter
 from .models import Category, Product
+from orders.cart import Cart
 
 
 class ProductListView(FilterView):
@@ -43,29 +44,12 @@ class ProductDetailView(DetailView):
         )
 
     def get_context_data(self, **kwargs):
-        from reviews.forms import ReviewForm
-        from reviews.services import has_purchased
-        from orders.cart import Cart
-
-        ctx = super().get_context_data(**kwargs)
-
-        user = self.request.user
-
-        ctx["can_review"] = (
-            user.is_authenticated 
-            and has_purchased(user, self.object)
-        )
-
-        ctx["review_form"] = ReviewForm()
-
-
-        # CART
-        cart = Cart(self.request)
-
-        ctx["cart_quantity"] = cart.cart.get(
-            str(self.object.id),
-            0
-        )
-
-
-        return ctx
+            context = super().get_context_data(**kwargs)
+            
+            cart = Cart(self.request.user)
+            
+            context['cart'] = cart  
+            
+            context['cart_items'] = cart.items()
+            
+            return context

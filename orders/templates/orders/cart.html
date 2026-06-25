@@ -6,14 +6,14 @@
   <div class="cart-container">
     <h1 class="cart-title">Shopping Cart</h1>
     <div class="cart-items-list">
-      {% for item in cart %}
+      {% for item in cart.items %}
       <div class="cart-item">
         {% if item.product.image %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="cart-item__image">{% endif %}
         <div class="cart-item__body">
           <div class="cart-item__details">
             <h2 class="cart-item__name">{{ item.product.name }}</h2>
             <div class="cart-item__price-info">
-              <p class="cart-item__price">${{ item.subtotal }}</p>
+              <p class="cart-item__price">${{ item.total_price }}</p>
               <span class="cart-item__price-tag">${{ item.product.price }} each</span>
             </div>
           </div>
@@ -37,9 +37,9 @@
       <p>Your cart is empty.</p>
       {% endfor %}
     </div>
-    {% if cart|length %}
+    {% if cart.count > 0 %}
     <div class="cart-summary">
-      <div class="cart-summary__total"><p>Total</p><p>${{ cart.total }}</p></div>
+      <div class="cart-summary__total"><p>Total</p><p>${{ cart.total_price }}</p></div>
       <a href="{% url 'orders:checkout' %}" class="button button--primary button--checkout">Proceed to Checkout</a>
     </div>
     {% endif %}

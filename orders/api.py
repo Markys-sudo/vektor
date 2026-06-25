@@ -2,7 +2,6 @@ from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-
 from .models import Order
 from .permissions import IsOwner
 from .serializers import OrderCreateSerializer, OrderSerializer
@@ -46,3 +45,4 @@ class OrderViewSet(
         order.status = Order.Status.CANCELLED
         order.save(update_fields=["status"])
         return Response(OrderSerializer(order).data)
+

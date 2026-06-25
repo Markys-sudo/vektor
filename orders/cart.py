@@ -1,56 +1,76 @@
-from __future__ import annotations
-
 from decimal import Decimal
-
+from django.db import transaction
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
 from products.models import Product
-
-CART_SESSION_KEY = "cart"
+from .models import CartItem
 
 
 class Cart:
+    def __init__(self, user):
+        self.user = user
 
-    def __init__(self, request):
-        self.session = request.session
-        cart = self.session.get(CART_SESSION_KEY)
-        if cart is None:
-            cart = self.session[CART_SESSION_KEY] = {}
-        self.cart = cart
+    @transaction.atomic
+    def add_to_cart(self, product: Product, quantity: int = 1, *, replace: bool = False) -> CartItem | None:
+        # Задаємо дефолтне значення 1, щоб не порушувати констреінт бази даних
+        item, created = CartItem.objects.select_for_update().get_or_create(
+            user=self.user,
+            product=product,
+            defaults={"quantity": 1, "total_price": product.price}
+        )
 
-    def add(self, product, quantity=1, *, replace=False):
-        pid = str(product.id)
-        current = self.cart.get(pid, 0)
-        new_qty = quantity if replace else current + quantity
-        self.cart[pid] = max(1, min(new_qty, product.stock))
-        self.save()
-
-    def set_quantity(self, product, quantity):
-        if quantity <= 0:
-            self.remove(product)
+        # Розраховуємо нову кількість
+        if replace:
+            new_quantity = quantity
         else:
-            self.add(product, quantity, replace=True)
+            # Якщо об'єкт щойно створено, його поточна кількість у базі вже дорівнює 1 (з defaults).
+            # Але користувач просив додати `quantity` (зазвичай 1 або більше).
+            # Тому для нового об'єкта ми беремо просто `quantity`, а для старого — додаємо.
+            new_quantity = quantity if created else item.quantity + quantity
 
-    def remove(self, product):
-        self.cart.pop(str(product.id), None)
-        self.save()
+        # Валідація залишків на складі
+        if new_quantity > product.stock:
+            new_quantity = product.stock
 
-    def clear(self):
-        self.session.pop(CART_SESSION_KEY, None)
-        self.save()
+        # Якщо кількість <= 0, видаляємо товар з кошика
+        if new_quantity <= 0:
+            if not created:  # Якщо об'єкт вже існував у базі, видаляємо його
+                item.delete()
+            elif created:
+                # Якщо ми його щойно створили (наприклад, передали від'ємне значення), 
+                # але база його вже зберегла з quantity=1, видаляємо його назад
+                item.delete()
+            return None
 
-    def save(self):
-        self.session[CART_SESSION_KEY] = self.cart
-        self.session.modified = True 
-
-    def __iter__(self):
-        products = Product.objects.filter(id__in=self.cart.keys())
-        for product in products:
-            qty = self.cart[str(product.id)]
-            yield {"product": product, "quantity": qty, "subtotal": product.price * qty}
-
-    def __len__(self):
-        return sum(self.cart.values())
-
-    @property
-    def total(self) -> Decimal:
-        products = Product.objects.filter(id__in=self.cart.keys())
-        return sum((p.price * self.cart[str(p.id)] for p in products), Decimal("0"))
+        # Оновлюємо поля та зберігаємо
+        item.quantity = new_quantity
+        item.total_price = Decimal(new_quantity) * product.price
+        item.save(update_fields=["quantity", "total_price"])
+        
+        return item
+    
+    def set_quantity(self, product: Product, quantity: int) -> CartItem | None:
+        return self.add_to_cart(product, quantity, replace=True)
+    
+    def remove(self, product: Product) -> None:
+        CartItem.objects.filter(user=self.user, product=product).delete()
+            
+    def clear(self) -> None:
+        CartItem.objects.filter(user=self.user).delete()    
+    
+    def items(self):
+        return CartItem.objects.filter(user=self.user).select_related("product")
+    
+    def total_price(self) -> Decimal:
+        # Агрегація на рівні БД для обчислення загальної вартості товарів у кошику
+        result = self.items().aggregate(
+            total=Coalesce(Sum("total_price"), Decimal("0.00"))
+        )
+        return result["total"]
+        
+    def count(self) -> int:
+        # Рахуємо суму кількостей товарів безпосередньо в БД
+        result = self.items().aggregate(
+            total_count=Coalesce(Sum("quantity"), 0)
+        )
+        return result["total_count"]

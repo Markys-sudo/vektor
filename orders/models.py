@@ -44,12 +44,17 @@ class OrderItem(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["order", "product"], name="uniq_order_product"),
+            models.UniqueConstraint(
+                fields=["order", "product"],
+                name="uniq_order_product"),
             models.CheckConstraint(
-                condition=models.Q(quantity__gt=0), name="orderitem_quantity_positive"
+                condition=models.Q(
+                    quantity__gt=0), 
+                name="orderitem_quantity_positive"
             ),
             models.CheckConstraint(
-                condition=models.Q(price__gte=0), name="orderitem_price_non_negative"
+                condition=models.Q(price__gte=0), 
+                name="orderitem_price_non_negative"
             ),
         ]
 
@@ -59,3 +64,32 @@ class OrderItem(models.Model):
     @property
     def subtotal(self):
         return self.price * self.quantity
+    
+    
+class CartItem(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="cart_items"
+    )
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, 
+                                related_name="cart_items")
+    quantity = models.PositiveIntegerField(default=1)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "product"], 
+                name="uniq_cart_user_product"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(quantity__gt=0), 
+                name="cartitem_quantity_positive"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.quantity} × {self.product.name}"
+
+
