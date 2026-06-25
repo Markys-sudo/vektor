@@ -1532,6 +1532,8 @@ body.user-logged-in .header__user-actions {
     border-top: 1px solid var(--border-default);
 }
 
+
+
 .order-table-cell {
     padding: 20px;
     font-size: 16px;
@@ -1983,8 +1985,8 @@ body.user-logged-in .header__user-actions {
 
 
 .status-select {
-    width: 100%;
-    padding: 8px 36px 8px 12px;
+    /* width: 100%;
+    padding: 8px 36px 8px 12px; */
     border-radius: 8px;
     border: 1px solid var(--border-default);
     background-color: var(--background-default);
@@ -2014,3 +2016,4 @@ body.user-logged-in .header__user-actions {
     border-color: var(--green);
     box-shadow: 0 0 0 3px rgba(2, 84, 45, 0.15);
 }
+

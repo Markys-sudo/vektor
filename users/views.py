@@ -5,10 +5,13 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from orders.models import Order
-from .models import User
+from .models import User, UserProfile
 from .filters import OrderFilter
-from .forms import RegisterForm, LoginForm
+from .forms import RegisterForm, LoginForm, UserProfileForm
 from django_filters.views import FilterView
+from django.views.generic.edit import UpdateView
+from django.urls import reverse_lazy
+
 
 class OrderHistoryView(LoginRequiredMixin, FilterView):
     template_name = "users/order_history.html"
@@ -25,14 +28,16 @@ class OrderHistoryView(LoginRequiredMixin, FilterView):
             .prefetch_related("items__product")
         )
     
-class AccountInfoView(LoginRequiredMixin, TemplateView):
+class AccountInfoView(LoginRequiredMixin, UpdateView):
+    model = UserProfile
+    form_class = UserProfileForm
     template_name = "users/account_info.html"
+    success_url = reverse_lazy("accounts:account_info")
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["user"] = self.request.user
-        return context
-
+    def get_object(self, queryset=None):
+        # Get or create the UserProfile for the logged-in user
+        profile, created = UserProfile.objects.get_or_create(user=self.request.user)
+        return profile
 
 class RegisterView(View):
     def get(self, request):

@@ -7,63 +7,57 @@
   <div class="account-container">
     <!-- Tabs Navigation -->
     <div class="account-tabs">
-              <div class="account-tab ">
-                <a href="{% url 'accounts:order_history' %}">Orders History</a>
-              </div>
-              <div class="account-tab active">
-                <a href="{% url 'accounts:account_info' %}">Account Information</a>
-              </div>
+        <div class="account-tab ">
+            <a href="{% url 'accounts:order_history' %}">Orders History</a>
+         </div>
+        <div class="account-tab active">
+            <a href="{% url 'accounts:account_info' %}">Account Information</a>
+        </div>
     </div>
-<div class="tab-content">
+    <div class="tab-content">
+        <!-- Account Information Panel -->
+        <div id="account-info" class="tab-pane active">
+            <div class="account-form-container">
+                <h2 class="account-form-title">Personal Info</h2>
+                <form method="post" id="account-info-form">
+                    {% csrf_token %}
+                
+                    <div class="checkout-form-group">
+                        <label for="{{ form.full_name.id_for_label }}">Full Name</label>
+                        {{ form.full_name }}
+                    </div>
+                    <div class="checkout-form-group">
+                        <label>Email</label>
+                        {{ form.email }}
+                    </div>
+                    <div class="checkout-form-group">
+                        <label>Phone number</label>
+                        {{ form.phone_number }}
+                    </div>
 
-  <!-- ORDER HISTORY -->
-  <div id="order-history" class="tab-pane active">
+                    <div class="checkout-form-group">
+                        <label>City</label>
+                        {{ form.city }}
+                    </div>
 
-    <div class="order-history-table">
+                    <div class="checkout-form-group">
+                        <label>Shipping address</label>
+                        {{ form.address }}
+                    </div>
 
-      <div class="order-table-header">
-        <div class="order-table-cell">Order Details</div>
-        <div class="order-table-cell">Order Status</div>
-        <div class="order-table-cell">Total</div>
+                    <button class="button button--primary button--full-width">
+                        Save
+                    </button>
+                </form>
+            
+            <a href="{% url 'accounts:logout' %}" class="button button--secondary button--full-width" id="logout-button">Logout</a>
+        </div>
       </div>
 
-      <div class="order-table-body">
-
-        {% for order in orders %}
-          <div class="order-table-row">
-            <div class="order-table-cell">
-              <strong>Order #{{ order.id }}</strong><br>
-              {{ order.created_at|date:"M d, Y" }}
-            </div>
-
-            <div class="order-table-cell">
-              {% if order.status == 'pending' %}
-                <span class="status-badge status-pending">Pending</span>
-              {% elif order.status == 'shipped' %}
-                <span class="status-badge status-shipped">Shipped</span>
-              {% elif order.status == 'delivered' %}
-                <span class="status-badge status-delivered">Delivered</span>
-              {% elif order.status == 'cancelled' %}
-                <span class="status-badge status-cancelled">Cancelled</span>
-              {% else %}
-                <span class="status-badge">{{ order.status }}</span>
-              {% endif %}
-            </div>
-
-            <div class="order-table-cell">
-              ${{ order.total_price }}
-            </div>
-          </div>
-        {% empty %}
-          <div class="order-table-row">
-            <div class="order-table-cell">
-              <p>You have no orders yet.</p>
-            </div>
-          </div>
-        {% endfor %}
-
-      </div>
     </div>
+
+
+
 </div>
 </main>
 {% endblock %}

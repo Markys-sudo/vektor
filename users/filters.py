@@ -1,5 +1,7 @@
 import django_filters
 from .models import Order
+from django import forms
+
 
 
 class OrderFilter(django_filters.FilterSet):
@@ -30,3 +32,6 @@ class OrderFilter(django_filters.FilterSet):
             "date_to",
             "status",
         ]
+        widgets = {
+            'status': forms.Select(attrs={'class': 'status-select'}),       
+        }

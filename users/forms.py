@@ -1,7 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate
 from django import forms
-from .models import User
+from .models import User, UserProfile
 
 
 class RegisterForm(UserCreationForm):
@@ -65,3 +65,16 @@ class LoginForm(forms.Form):
                 )
             self.user = user  # Store the authenticated user for later use
         return cleaned_data
+    
+    
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ["full_name","phone_number","email","city",'address']
+        widgets = {
+            'full_name': forms.TextInput(attrs={'class': 'Input', 'placeholder': 'Full Name'}),
+            'phone_number': forms.TextInput(attrs={'class': 'Input', 'placeholder': 'Phone Number'}),
+            'email': forms.EmailInput(attrs={'class': 'Input', 'placeholder': 'Email'}),
+            'city': forms.TextInput(attrs={'class': 'Input', 'placeholder': 'City'}),
+            'address': forms.Textarea(attrs={'class': 'Textarea', 'placeholder': 'Address', 'rows': 3}),
+        }
