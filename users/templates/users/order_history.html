@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<main class="account-page-wrapper">
+  <div class="account-container">
+    <!-- Tabs Navigation -->
+    <div class="account-tabs">
+              <div class="account-tab active ">
+                <a href="{% url 'accounts:order_history' %}">Orders History</a>
+              </div>
+              <div class="account-tab ">
+                <a href="{% url 'accounts:account_info' %}">Account Information</a>
+              </div>
+    </div>
+<div class="tab-content">
+
+  <!-- ORDER HISTORY -->
+  <div id="order-history" class="tab-pane active">
+
+    <div class="order-history-table">
+
+      <div class="order-table-header">
+        <div class="order-table-cell">Order Details</div>
+        <div class="order-table-cell">
+        <form method="get">
+            <select class="status-select" name="status" onchange="this.form.submit()">
+               
+                {% for value, label in filter.form.status.field.choices %}
+                    <option value="{{ value }}"
+                        {% if request.GET.status == value %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+      </div>
+        <div class="order-table-cell">Total</div>
+      </div>
+
+      <div class="order-table-body">
+
+        {% for order in orders %}
+          <div class="order-table-row">
+            <div class="order-table-cell">
+              <strong>Order #{{ order.id }}</strong><br>
+              {{ order.created_at|date:"M d, Y" }}
+            </div>
+
+            <div class="order-table-cell">
+                <span class="status-badge">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+
+            <div class="order-table-cell">
+              ${{ order.total_price }}
+            </div>
+          </div>
+        {% empty %}
+          <div class="order-table-row">
+            <div class="order-table-cell">
+              <p>You have no orders yet.</p>
+            </div>
+          </div>
+        {% endfor %}
+
+      </div>
+    </div>
+
+    <!-- pagination MUST be INSIDE tab-pane -->
+<div class="account-pagination">
+
+  {% if page_obj.has_previous %}
+    <a 
+      href="?{{ request.GET.urlencode }}&page={{ page_obj.previous_page_number }}"
+      class="pagination-link-account">
+      ← Previous
+    </a>
+  {% else %}
+    <span class="pagination-link-account disabled">
+      ← Previous
+    </span>
+  {% endif %}
+
+  {% if page_obj.has_next %}
+    <a 
+      href="?{{ request.GET.urlencode }}&page={{ page_obj.next_page_number }}"
+      class="pagination-link-account">
+      Next →
+    </a>
+  {% else %}
+    <span class="pagination-link-account disabled">
+      Next →
+    </span>
+  {% endif %}
+
+</div>
+
+  </div>
+</div>
+</main>
+{% endblock %}
+

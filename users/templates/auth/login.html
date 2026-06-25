@@ -1,47 +1,49 @@
-{% extends 'base.html' %}
-{% load static %}
+  {% extends 'base.html' %}
+  {% load static %}
 
-{% block content %}
+  {% block content %}
 
-<main class="auth-page-wrapper">
-  <div class="auth-background">
-    <img src="{% static 'img/background/pattern.jpg' %}" alt="Background pattern">
-  </div>
+  <main class="auth-page-wrapper">
+    <div class="auth-background">
+      <img src="{% static 'img/background/pattern.jpg' %}" alt="Background pattern">
+    </div>
 
-  <div class="auth-form-container">
-    <div class="auth-container auth-container--login">
+    <div class="auth-form-container">
+      <div class="auth-container auth-container--login">
+        <h2 class="auth-form-title">Welcome Back</h2>
 
-      <h2 class="auth-form-title">Welcome Back</h2>
+        <form class="auth-form" method="post" action="{% url 'accounts:login' %}">
+          {% csrf_token %}
 
-      <form class="auth-form" method="post" action="{% url 'accounts:login' %}">
-        {% csrf_token %}
+          {% if form.non_field_errors %}
+            <div class="alert alert-error">
+              {{ form.non_field_errors }}
+            </div>
+          {% endif %}
 
-        <div class="InputField">
-          <label for="username">Login</label>
-          <input type="text" id="username" name="username" class="Input" placeholder="Login" required>
-        </div>
+          <div class="InputField">
+            <label>Login</label>
+            {{ form.username }}
+          </div>
 
-        <div class="InputField">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" class="Input" placeholder="Password" required>
-        </div>
+          <div class="InputField">
+            <label>Password</label>
+            {{ form.password }}
+          </div>
 
-        <div class="ButtonGroup">
-          <button type="submit" class="button button--primary">Sign In</button>
-        </div>
+          <div class="ButtonGroup">
+            <button type="submit" class="button button--primary">
+              Sign In
+            </button>
+          </div>
+        </form>
 
         <div class="TextLink">
-          <a href="#">Forgot password?</a>
+          <p>Don't have an account? <a href="{% url 'accounts:register' %}">Sign Up</a></p>
         </div>
 
-      </form>
-
-      <div class="TextLink">
-        <p>Don't have an account? <a href="{% url 'accounts:register' %}">Sign Up</a></p>
       </div>
-
     </div>
-  </div>
-</main>
+  </main>
 
-{% endblock %}
+  {% endblock %}

@@ -2,13 +2,9 @@ from rest_framework import viewsets
 from django.db.models import Avg, Count
 
 from .models import Product, Category
-from .serializers import ProductSerializer, CategorySerializer
+from .serializers import ProductSerializer
 from .filters import ProductFilter
 
-
-class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
     
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Product.objects.all().annotate(

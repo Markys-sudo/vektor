@@ -1980,3 +1980,37 @@ body.user-logged-in .header__user-actions {
     height: 44px;
     padding: 0 32px;
 }
+
+
+.status-select {
+    width: 100%;
+    padding: 8px 36px 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-default);
+    background-color: var(--background-default);
+    color: var(--black-main);
+    font-size: 16px;
+    font-family: var(--font-family);
+    cursor: pointer;
+
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%23757575' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+}
+
+/* hover */
+.status-select:hover {
+    border-color: var(--border-dark-grey);
+}
+
+/* focus (как у твоих Input) */
+.status-select:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(2, 84, 45, 0.15);
+}

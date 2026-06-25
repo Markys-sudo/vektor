@@ -1,8 +1,8 @@
 from rest_framework.routers import DefaultRouter
-from .api_view import ProductViewSet, CategoryViewSet
+from .api_view import ProductViewSet
 
 router = DefaultRouter()
 router.register(r"products", ProductViewSet, basename="products")
-router.register(r"categories", CategoryViewSet, basename="categories")
+
 
 urlpatterns = router.urls

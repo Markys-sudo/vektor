@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<main class="account-page-wrapper">
+  <div class="account-container">
+    <!-- Tabs Navigation -->
+    <div class="account-tabs">
+              <div class="account-tab ">
+                <a href="{% url 'accounts:order_history' %}">Orders History</a>
+              </div>
+              <div class="account-tab active">
+                <a href="{% url 'accounts:account_info' %}">Account Information</a>
+              </div>
+    </div>
+<div class="tab-content">
+
+  <!-- ORDER HISTORY -->
+  <div id="order-history" class="tab-pane active">
+
+    <div class="order-history-table">
+
+      <div class="order-table-header">
+        <div class="order-table-cell">Order Details</div>
+        <div class="order-table-cell">Order Status</div>
+        <div class="order-table-cell">Total</div>
+      </div>
+
+      <div class="order-table-body">
+
+        {% for order in orders %}
+          <div class="order-table-row">
+            <div class="order-table-cell">
+              <strong>Order #{{ order.id }}</strong><br>
+              {{ order.created_at|date:"M d, Y" }}
+            </div>
+
+            <div class="order-table-cell">
+              {% if order.status == 'pending' %}
+                <span class="status-badge status-pending">Pending</span>
+              {% elif order.status == 'shipped' %}
+                <span class="status-badge status-shipped">Shipped</span>
+              {% elif order.status == 'delivered' %}
+                <span class="status-badge status-delivered">Delivered</span>
+              {% elif order.status == 'cancelled' %}
+                <span class="status-badge status-cancelled">Cancelled</span>
+              {% else %}
+                <span class="status-badge">{{ order.status }}</span>
+              {% endif %}
+            </div>
+
+            <div class="order-table-cell">
+              ${{ order.total_price }}
+            </div>
+          </div>
+        {% empty %}
+          <div class="order-table-row">
+            <div class="order-table-cell">
+              <p>You have no orders yet.</p>
+            </div>
+          </div>
+        {% endfor %}
+
+      </div>
+    </div>
+</div>
+</main>
+{% endblock %}
+

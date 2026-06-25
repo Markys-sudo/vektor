@@ -6,85 +6,69 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from orders.models import Order
 from .models import User
+from .filters import OrderFilter
+from .forms import RegisterForm, LoginForm
+from django_filters.views import FilterView
 
-class OrderHistoryView(LoginRequiredMixin, TemplateView):
+class OrderHistoryView(LoginRequiredMixin, FilterView):
     template_name = "users/order_history.html"
+    model = Order
+    filterset_class = OrderFilter
+    context_object_name = "orders"
+    paginate_by = 7
+
+    def get_queryset(self):
+        return (
+            Order.objects
+            .filter(user=self.request.user)
+            .order_by("-created_at")
+            .prefetch_related("items__product")
+        )
+    
+class AccountInfoView(LoginRequiredMixin, TemplateView):
+    template_name = "users/account_info.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["orders"] = Order.objects.filter(user=self.request.user).order_by("-created_at")
+        context["user"] = self.request.user
         return context
-
 
 
 class RegisterView(View):
     def get(self, request):
-        return render(request, "auth/register.html")
-
+        form = RegisterForm()
+        return render(request, "auth/register.html", {"form": form})
+    
     def post(self, request):
-        username = request.POST.get("username")
-        email = request.POST.get("email")
-        password = request.POST.get("password")
-        password2 = request.POST.get("password2")
-
-        if not username or not email or not password:
-            messages.error(request, "All fields are required")
-            return redirect("accounts:register")
-
-        if password != password2:
-            messages.error(request, "Passwords do not match")
-            return redirect("accounts:register")
-
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already exists")
-            return redirect("accounts:register")
-
-        if User.objects.filter(email=email).exists():
-            messages.error(request, "Email already exists")
-            return redirect("accounts:register")
-        
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password
-        )
-
-        login(request, user)
-
-        messages.success(request, "Account created successfully")
-        return redirect("home")
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, "Registration successful. You can now log in.")
+            return redirect("home")
+        return render(request, "auth/register.html", {"form": form})
     
     
 class LoginView(View):
+
     def get(self, request):
-        return render(request, "auth/login.html")
+        form = LoginForm()
+        return render(request, "auth/login.html", {"form": form})
+
 
     def post(self, request):
-        username = request.POST.get("username")
-        password = request.POST.get("password")
 
-        # 1. try login by username
-        user = authenticate(request, username=username, password=password)
+        form = LoginForm(request.POST)
 
-        # 2. fallback: treat input as email
-        if user is None:
-            try:
-                user_obj = User.objects.get(email=username)
+        if form.is_valid():
 
-                user = authenticate(
-                    request,
-                    username=user_obj.username,
-                    password=password
-                )
-            except User.DoesNotExist:
-                user = None
+            # беремо user з форми
+            login(request, form.user)
 
-        if user:
-            login(request, user)
+            messages.success(request, "Welcome back!")
             return redirect("home")
 
-        messages.error(request, "Invalid credentials")
-        return redirect("accounts:login")
+        return render(request, "auth/login.html", {"form": form})
     
 class LogoutView(View):
     def get(self, request):
@@ -92,10 +76,25 @@ class LogoutView(View):
         return redirect("accounts:login")
     
     
-class ProfileView(View):
+class ChangePasswordView(LoginRequiredMixin, View):
     def get(self, request):
-        if not request.user.is_authenticated:
-            return redirect("accounts:login")
-        
-        return render(request, "auth/profile.html", {"user": request.user})
-    
+        return render(request, "auth/change_password.html")
+
+    def post(self, request):
+        current_password = request.POST.get("current_password")
+        new_password = request.POST.get("new_password")
+        confirm_password = request.POST.get("confirm_password")
+
+        if not request.user.check_password(current_password):
+            messages.error(request, "Current password is incorrect.")
+            return redirect("accounts:change_password")
+
+        if new_password != confirm_password:
+            messages.error(request, "New passwords do not match.")
+            return redirect("accounts:change_password")
+
+        request.user.set_password(new_password)
+        request.user.save()
+        messages.success(request, "Password changed successfully. Please log in again.")
+        logout(request)
+        return redirect("accounts:login")

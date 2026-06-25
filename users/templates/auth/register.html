@@ -3,14 +3,86 @@
 
 {% block content %}
 
-<div class="container">
-    <h2>Register</h2>
-    <form method="post" action="{% url 'accounts:register' %}">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Register</button>
-    </form>
+<main class="auth-page-wrapper">
 
-</div>
+    <div class="auth-background">
+        <img src="{% static 'img/background/pattern.jpg' %}" alt="Background pattern">
+    </div>
+
+
+    <div class="auth-form-container">
+
+        <div class="auth-container auth-container--register">
+
+            <div class="Legend">
+                <h1 class="auth-title">Register</h1>
+            </div>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            <form class="auth-form" method="POST">
+                {% csrf_token %}
+                <div class="InputField">
+                    <label for="username">Login</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <small>
+                            {{ form.username.errors }}
+                        </small>
+                    {% endif %}
+                </div>
+                <div class="InputField">
+                    <label for="email">Email</label>
+
+                    {{ form.email }}
+
+                    {% if form.email.errors %}
+                        <small>
+                            {{ form.email.errors }}
+                        </small>
+                    {% endif %}
+                </div>
+                <div class="InputField">
+                    <label for="password1">Password</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        <small>
+                            {{ form.password1.errors }}
+                        </small>
+                    {% endif %}
+                </div>
+                <div class="InputField">
+                    <label for="password2">
+                        Confirm Password
+                    </label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <small>
+                            {{ form.password2.errors }}
+                        </small>
+                    {% endif %}
+                </div>
+                <div class="ButtonGroup">
+                    <button 
+                        type="submit" 
+                        class="button button--primary">
+                        Register
+                    </button>
+                </div>
+            </form>
+            <p class="auth-switch">
+                Already have an account?
+
+                <a href="{% url 'accounts:login' %}">
+                    Sign in
+                </a>
+            </p>
+        </div>
+    </div>
+</main>
 
 {% endblock %}
