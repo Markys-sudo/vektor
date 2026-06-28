@@ -63,9 +63,7 @@
 
             </div>
 
-
         {% else %}
-
 
             <div class="header__auth-buttons">
 
@@ -74,7 +72,6 @@
                     Login
                 </a>
 
-
                 <a href="{% url 'accounts:register' %}" 
                    class="button button--primary">
                     Register
@@ -82,12 +79,22 @@
 
             </div>
 
-
         {% endif %}
-
 
     </div>
 </header>
+
+<!-- ГЛОБАЛЬНЫЙ БЛОК ДЛЯ СООБЩЕНИЙ DJANGO -->
+{% if messages %}
+  <div class="messages-container">
+    {% for message in messages %}
+      <div class="alert alert--{{ message.tags }}">
+        <span class="alert__text">{{ message }}</span>
+        <button class="alert__close" onclick="this.parentElement.remove()">&times;</button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
 
 {% block content %}
 {% endblock %}
@@ -101,7 +108,6 @@
 
 {% block scripts %}
 {% endblock %}
-
 
 </body>
 </html>

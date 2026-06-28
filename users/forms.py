@@ -1,7 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate
 from django import forms
-from .models import User, UserProfile
+from .models import User
 from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.forms import SetPasswordForm
@@ -72,10 +72,11 @@ class LoginForm(forms.Form):
     
 class UserProfileForm(forms.ModelForm):
     class Meta:
-        model = UserProfile
-        fields = ["full_name","phone_number","email","city",'address']
+        model = User
+        fields = ["first_name","last_name","phone_number","email","city",'address']
         widgets = {
-            'full_name': forms.TextInput(attrs={'class': 'Input', 'placeholder': 'Full Name'}),
+            'first_name': forms.TextInput(attrs={'class': 'Input', 'placeholder': 'First Name'}),
+            'last_name': forms.TextInput(attrs={'class': 'Input', 'placeholder': 'Last Name'}),
             'phone_number': forms.TextInput(attrs={'class': 'Input', 'placeholder': 'Phone Number'}),
             'email': forms.EmailInput(attrs={'class': 'Input', 'placeholder': 'Email'}),
             'city': forms.TextInput(attrs={'class': 'Input', 'placeholder': 'City'}),

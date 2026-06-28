@@ -23,8 +23,12 @@
                     {% csrf_token %}
                 
                     <div class="checkout-form-group">
-                        <label for="{{ form.full_name.id_for_label }}">Full Name</label>
-                        {{ form.full_name }}
+                        <label for="{{ form.first_name.id_for_label }}">First Name</label>
+                        {{ form.first_name }}
+                    </div>
+                    <div class="checkout-form-group">
+                        <label for="{{ form.last_name.id_for_label }}">Last Name</label>
+                        {{ form.last_name }}
                     </div>
                     <div class="checkout-form-group">
                         <label>Email</label>
@@ -56,6 +60,40 @@
 
     </div>
 
+<div class="checkout-form-group" style="margin-top: 20px;">
+    <label>Telegram Integration</label>
+    {% if request.user.telegram_id %}
+        <p style="color: #28a745; font-weight: 500;">
+            ✓ Connected as @{{ request.user.telegram_username }}
+        </p>
+    {% else %}
+        <!-- Кнопка вызывает JS функцию для получения ссылки -->
+        <button type="button" onclick="linkTelegram()" class="button button--secondary button--full-width">
+            Link Telegram Account
+        </button>
+    {% endif %}
+</div>
+
+<script>
+function linkTelegram() {
+    // Делаем запрос к нашему новому эндпоинту
+    fetch('/api/auth/telegram-link/', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.link) {
+            // Перенаправляем пользователя на бота в Telegram
+            window.open(data.link, '_blank');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
 
 
 </div>

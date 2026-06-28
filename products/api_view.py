@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from django.db.models import Avg, Count
 
-from .models import Product, Category
+from .models import Product
 from .serializers import ProductSerializer
 from .filters import ProductFilter
 

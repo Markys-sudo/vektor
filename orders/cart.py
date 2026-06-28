@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from decimal import Decimal
 from django.db import transaction
 from django.db.models import Sum
@@ -5,23 +7,24 @@ from django.db.models.functions import Coalesce
 from products.models import Product
 from .models import CartItem
 
+CART_SESSION_KEY = "cart"
+
 
 class Cart:
     def __init__(self, request):
         self.request = request
         self.user = request.user
-        # Проверяем, авторизован ли пользователь
         self.is_authenticated = self.user.is_authenticated
         
-        # Если это гость, инициализируем корзину в сессии
+        # Если гость, инициализируем простую сессию {product_id: quantity}
         if not self.is_authenticated:
-            if 'cart' not in self.request.session:
-                self.request.session['cart'] = {}
-            self.session_cart = self.request.session['cart']
+            if CART_SESSION_KEY not in self.request.session:
+                self.request.session[CART_SESSION_KEY] = {}
+            self.session_cart = self.request.session[CART_SESSION_KEY]
 
-    def add_to_cart(self, product: Product, quantity: int = 1, *, replace: bool = False) -> CartItem | None:
+    def add(self, product: Product, quantity: int = 1, *, replace: bool = False) -> CartItem | None:
         if self.is_authenticated:
-            # --- ЛОГИКА ДЛЯ АВТОРИЗОВАННЫХ (БАЗА ДАННЫХ) ---
+            # --- ЛОГИКА ДЛЯ БАЗЫ ДАННЫХ ---
             with transaction.atomic():
                 item, created = CartItem.objects.select_for_update().get_or_create(
                     user=self.user,
@@ -32,14 +35,15 @@ class Cart:
                 if replace:
                     new_quantity = quantity
                 else:
+                    # ИСПРАВЛЕНО: Если запись создана с нуля, берем переданный quantity.
+                    # Если запись уже была, корректно суммируем старое количество и новое.
                     new_quantity = quantity if created else item.quantity + quantity
 
                 if new_quantity > product.stock:
                     new_quantity = product.stock
 
                 if new_quantity <= 0:
-                    if not created:
-                        item.delete()
+                    item.delete()
                     return None
 
                 item.quantity = new_quantity
@@ -47,87 +51,141 @@ class Cart:
                 item.save(update_fields=["quantity", "total_price"])
                 return item
         else:
-            # --- ЛОГИКА ДЛЯ ГОСТЕЙ (СЕССИЯ / КЭШ) ---
+            # --- ЛОГИКА ДЛЯ СЕССИИ (Храним только ID: quantity) ---
             product_id = str(product.id)
+            current_quantity = self.session_cart.get(product_id, 0)
             
-            if replace:
-                new_quantity = quantity
-            else:
-                current_quantity = self.session_cart.get(product_id, {}).get('quantity', 0)
-                new_quantity = current_quantity + quantity
+            new_quantity = quantity if replace else current_quantity + quantity
 
             if new_quantity > product.stock:
                 new_quantity = product.stock
 
             if new_quantity <= 0:
-                if product_id in self.session_cart:
-                    del self.session_cart[product_id]
-                self.request.session.modified = True
+                self.session_cart.pop(product_id, None)
+                self.save_session()
                 return None
 
-            # Сохраняем данные товара в сессию
-            self.session_cart[product_id] = {
-                'quantity': new_quantity,
-                'price': str(product.price),
-                'total_price': str(Decimal(new_quantity) * product.price)
-            }
-            self.request.session.modified = True
+            self.session_cart[product_id] = new_quantity
+            self.save_session()
             return None
 
+
     def set_quantity(self, product: Product, quantity: int) -> CartItem | None:
-        return self.add_to_cart(product, quantity, replace=True)
+        if quantity <= 0:
+            self.remove(product)
+            return None
+        return self.add(product, quantity, replace=True)
     
     def remove(self, product: Product) -> None:
         if self.is_authenticated:
             CartItem.objects.filter(user=self.user, product=product).delete()
         else:
-            product_id = str(product.id)
-            if product_id in self.session_cart:
-                del self.session_cart[product_id]
-                self.request.session.modified = True
+            self.session_cart.pop(str(product.id), None)
+            self.save_session()
             
     def clear(self) -> None:
         if self.is_authenticated:
             CartItem.objects.filter(user=self.user).delete()
         else:
-            self.request.session['cart'] = {}
-            self.request.session.modified = True    
+            self.request.session.pop(CART_SESSION_KEY, None)
+            self.save_session()    
     
-    def items(self):
-        if self.is_authenticated:
-            return CartItem.objects.filter(user=self.user).select_related("product")
-        else:
-            # Для гостей собираем список "виртуальных" объектов из сессии
-            product_ids = self.session_cart.keys()
-            products = Product.objects.filter(id__in=product_ids)
-            
-            cart_items = []
-            for product in products:
-                session_item = self.session_cart[str(product.id)]
-                # ПРАВИЛЬНО: явно указываем user=None для изоляции анонимного пользователя
-                item = CartItem(
-                    user=None,  
-                    product=product,
-                    quantity=session_item['quantity'],
-                    total_price=Decimal(session_item['total_price'])
-                )
-                cart_items.append(item)
-            return cart_items
+    def save_session(self) -> None:
+        self.request.session.modified = True
 
-    def total_price(self) -> Decimal:
+    def merge_session_cart(self) -> None:
+        """Переносит легковесную корзину из сессии в БД после авторизации."""
+        if not self.request.user.is_authenticated or CART_SESSION_KEY not in self.request.session:
+            return
+
+        session_cart = self.request.session[CART_SESSION_KEY]
+        if not session_cart:
+            return
+
+        product_ids = list(session_cart.keys())
+        products_map = Product.objects.in_bulk(product_ids)
+
+        with transaction.atomic():
+            for product_id, session_quantity in session_cart.items():
+                product = products_map.get(int(product_id))
+                if not product:
+                    continue  # Защита, если товар удален из БД
+
+                item, created = CartItem.objects.select_for_update().get_or_create(
+                    user=self.request.user,
+                    product=product,
+                    defaults={
+                        "quantity": session_quantity, 
+                        "total_price": product.price * session_quantity
+                    }
+                )
+                
+                if not created:
+                    new_quantity = item.quantity + session_quantity
+                    
+                    if new_quantity > product.stock:
+                        new_quantity = product.stock
+
+                    if new_quantity <= 0:
+                        item.delete()
+                        continue
+
+                    item.quantity = new_quantity
+                    item.total_price = Decimal(new_quantity) * product.price
+                    item.save(update_fields=["quantity", "total_price"])
+
+        # Очищаем сессию, так как все данные перенесены в БД
+        self.request.session.pop(CART_SESSION_KEY, None)
+        self.save_session()
+
+    def __iter__(self):
+        """Возвращает генератор словарей для удобного цикла во views и шаблонах."""
         if self.is_authenticated:
-            result = CartItem.objects.filter(user=self.user).aggregate(
-                total=Coalesce(Sum("total_price"), Decimal("0.00"))
-            )
-            return result["total"]
+            # Для авторизованных тянем данные из БД (с оптимизацией select_related)
+            items = CartItem.objects.filter(user=self.user).select_related("product").order_by("id")
+            for item in items:
+                yield {
+                    "product": item.product,
+                    "quantity": item.quantity,
+                    "subtotal": item.total_price
+                }
         else:
-            return sum(Decimal(item['total_price']) for item in self.session_cart.values())
-        
-    def count(self) -> int:
+            # Для гостей собираем данные «на лету» по ID из сессии
+            product_ids = list(self.session_cart.keys())
+            products_map = Product.objects.in_bulk(product_ids)
+            
+            for product_id, qty in self.session_cart.items():
+                product = products_map.get(int(product_id))
+                if not product:
+                    continue
+                yield {
+                    "product": product,
+                    "quantity": qty,
+                    "subtotal": product.price * qty
+                }
+
+    def __len__(self) -> int:
+        """Позволяет использовать len(cart) для получения общего количества товаров."""
         if self.is_authenticated:
             result = CartItem.objects.filter(user=self.user).aggregate(
                 total_count=Coalesce(Sum("quantity"), 0)
             )
             return result["total_count"]
         else:
-            return sum(item['quantity'] for item in self.session_cart.values())
+            return sum(self.session_cart.values())
+
+    @property
+    def total(self) -> Decimal:
+        """Позволяет получать общую стоимость корзины через cart.total."""
+        if self.is_authenticated:
+            result = CartItem.objects.filter(user=self.user).aggregate(
+                total=Coalesce(Sum("total_price"), Decimal("0.00"))
+            )
+            return result["total"]
+        else:
+            product_ids = list(self.session_cart.keys())
+            products_map = Product.objects.in_bulk(product_ids)
+            return sum(
+                (p.price * self.session_cart[str(p.id)] for p in products_map.values()), 
+                Decimal("0.00")
+            )

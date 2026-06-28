@@ -52,8 +52,6 @@ class CartViewSet(viewsets.GenericViewSet):
         
         if item is None:
             return Response({"detail": "Item removed from cart."}, status=status.HTTP_200_OK)
-            
-        # Для повернення відповіді згенерованого об'єкта використовуємо CartItemSerializer явно
         return Response(CartItemSerializer(item, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=["delete"])

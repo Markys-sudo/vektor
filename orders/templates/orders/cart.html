@@ -6,14 +6,16 @@
   <div class="cart-container">
     <h1 class="cart-title">Shopping Cart</h1>
     <div class="cart-items-list">
-      {% for item in cart.items %}
+      <!-- ИСПРАВЛЕНО: Итерируемся напрямую по объекту cart (благодаря методу __iter__) -->
+      {% for item in cart %}
       <div class="cart-item">
         {% if item.product.image %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="cart-item__image">{% endif %}
         <div class="cart-item__body">
           <div class="cart-item__details">
             <h2 class="cart-item__name">{{ item.product.name }}</h2>
             <div class="cart-item__price-info">
-              <p class="cart-item__price">${{ item.total_price }}</p>
+              <!-- ИСПРАВЛЕНО: Используем item.subtotal вместо item.total_price -->
+              <p class="cart-item__price">${{ item.subtotal }}</p>
               <span class="cart-item__price-tag">${{ item.product.price }} each</span>
             </div>
           </div>
@@ -37,9 +39,12 @@
       <p>Your cart is empty.</p>
       {% endfor %}
     </div>
-    {% if cart.count > 0 %}
+    
+    <!-- ИСПРАВЛЕНО: Проверяем количество элементов через стандартный фильтр length (вызовет метод __len__) -->
+    {% if cart|length > 0 %}
     <div class="cart-summary">
-      <div class="cart-summary__total"><p>Total</p><p>${{ cart.total_price }}</p></div>
+      <!-- ИСПРАВЛЕНО: Используем cart.total вместо cart.total_price -->
+      <div class="cart-summary__total"><p>Total</p><p>${{ cart.total }}</p></div>
       <a href="{% url 'orders:checkout' %}" class="button button--primary button--checkout">Proceed to Checkout</a>
     </div>
     {% endif %}
