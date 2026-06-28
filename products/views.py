@@ -44,12 +44,17 @@ class ProductDetailView(DetailView):
         )
 
     def get_context_data(self, **kwargs):
-            context = super().get_context_data(**kwargs)
+        from reviews.forms import ReviewForm
+        from reviews.services import has_purchased
+        
+        context = super().get_context_data(**kwargs)
             
-            cart = Cart(self.request.user)
-            
-            context['cart'] = cart  
-            
-            context['cart_items'] = cart.items()
-            
-            return context
+        user = self.request.user
+        product = self.object
+        if user.is_authenticated:
+            context["can_review"] = has_purchased(user, product)
+        else:
+            context["can_review"] = False
+        context["review_form"] = ReviewForm()
+        
+        return context

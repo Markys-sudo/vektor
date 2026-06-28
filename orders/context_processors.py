@@ -2,4 +2,4 @@ from .cart import Cart
 
 
 def cart(request):
-    return {"cart_count": len(Cart(request))}
+    return {"cart_count": Cart(request).count()}

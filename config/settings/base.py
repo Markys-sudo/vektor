@@ -94,7 +94,6 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 
 DEFAULT_FROM_EMAIL = "shop@example.com"
 ADMIN_EMAIL = env("ADMIN_EMAIL", default="admin@example.com")

@@ -2,8 +2,11 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate
 from django import forms
 from .models import User, UserProfile
-
-
+from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
+from django.contrib.auth.forms import PasswordResetForm
+from django.contrib.auth.forms import SetPasswordForm
+        
+        
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
 
@@ -78,3 +81,28 @@ class UserProfileForm(forms.ModelForm):
             'city': forms.TextInput(attrs={'class': 'Input', 'placeholder': 'City'}),
             'address': forms.Textarea(attrs={'class': 'Textarea', 'placeholder': 'Address', 'rows': 3}),
         }
+  
+        
+class CustomPasswordChangeForm(DjangoPasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['old_password'].widget.attrs.update({'class': 'Input', 'placeholder': 'Old Password'})
+        self.fields['new_password1'].widget.attrs.update({'class': 'Input', 'placeholder': 'New Password'})
+        self.fields['new_password2'].widget.attrs.update({'class': 'Input', 'placeholder': 'Confirm New Password'})
+        
+
+class CustomPasswordResetForm(PasswordResetForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].widget.attrs.update({
+            'class': 'Input', 
+            'placeholder': 'Enter your email'
+        })
+        
+
+class CustomSetPasswordForm(SetPasswordForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Добавляем класс 'Input' и плейсхолдеры для обоих полей
+        self.fields['new_password1'].widget.attrs.update({'class': 'Input', 'placeholder': 'New password'})
+        self.fields['new_password2'].widget.attrs.update({'class': 'Input', 'placeholder': 'Confirm new password'})

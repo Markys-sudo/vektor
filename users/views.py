@@ -1,16 +1,18 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.contrib import messages
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView
 from orders.models import Order
-from .models import User, UserProfile
+from .models import UserProfile
 from .filters import OrderFilter
-from .forms import RegisterForm, LoginForm, UserProfileForm
+from .forms import RegisterForm, LoginForm, UserProfileForm, CustomPasswordChangeForm
 from django_filters.views import FilterView
 from django.views.generic.edit import UpdateView
 from django.urls import reverse_lazy
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from django.views.generic.edit import FormView
 
 
 class OrderHistoryView(LoginRequiredMixin, FilterView):
@@ -28,6 +30,7 @@ class OrderHistoryView(LoginRequiredMixin, FilterView):
             .prefetch_related("items__product")
         )
     
+    
 class AccountInfoView(LoginRequiredMixin, UpdateView):
     model = UserProfile
     form_class = UserProfileForm
@@ -38,6 +41,7 @@ class AccountInfoView(LoginRequiredMixin, UpdateView):
         # Get or create the UserProfile for the logged-in user
         profile, created = UserProfile.objects.get_or_create(user=self.request.user)
         return profile
+
 
 class RegisterView(View):
     def get(self, request):
@@ -60,20 +64,15 @@ class LoginView(View):
         form = LoginForm()
         return render(request, "auth/login.html", {"form": form})
 
-
     def post(self, request):
-
         form = LoginForm(request.POST)
-
         if form.is_valid():
-
             # беремо user з форми
             login(request, form.user)
-
             messages.success(request, "Welcome back!")
             return redirect("home")
-
         return render(request, "auth/login.html", {"form": form})
+    
     
 class LogoutView(View):
     def get(self, request):
@@ -81,25 +80,26 @@ class LogoutView(View):
         return redirect("accounts:login")
     
     
-class ChangePasswordView(LoginRequiredMixin, View):
-    def get(self, request):
-        return render(request, "auth/change_password.html")
+class ChangePasswordView(LoginRequiredMixin, FormView):
+    template_name = "auth/change_password.html"
+    form_class = CustomPasswordChangeForm
+    success_url = reverse_lazy("accounts:login")
 
-    def post(self, request):
-        current_password = request.POST.get("current_password")
-        new_password = request.POST.get("new_password")
-        confirm_password = request.POST.get("confirm_password")
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
-        if not request.user.check_password(current_password):
-            messages.error(request, "Current password is incorrect.")
-            return redirect("accounts:change_password")
+    def form_valid(self, form):
+        # Сохраняем новый пароль
+        user = form.save()
+                # Обновляем сессию, чтобы пользователя не выбросило из системы (опционально)
+        update_session_auth_hash(self.request, user)
+        
+        messages.success(self.request, "Password changed successfully.")
+        
+        return super().form_valid(form)
 
-        if new_password != confirm_password:
-            messages.error(request, "New passwords do not match.")
-            return redirect("accounts:change_password")
-
-        request.user.set_password(new_password)
-        request.user.save()
-        messages.success(request, "Password changed successfully. Please log in again.")
-        logout(request)
-        return redirect("accounts:login")
+    def form_invalid(self, form):
+        messages.error(self.request, "Please correct the errors below.")
+        return super().form_invalid(form)
