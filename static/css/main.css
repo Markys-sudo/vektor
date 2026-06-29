@@ -2010,10 +2010,85 @@ body.user-logged-in .header__user-actions {
     border-color: var(--border-dark-grey);
 }
 
-/* focus (как у твоих Input) */
 .status-select:focus {
     outline: none;
     border-color: var(--green);
     box-shadow: 0 0 0 3px rgba(2, 84, 45, 0.15);
 }
+/* ==========================================================================
+   ИСПРАВЛЕННЫЙ АДАПТИВНЫЙ ФУТЕР (Вставьте в самый конец CSS)
+   ========================================================================== */
+footer {
+    width: 100vw;               /* Форсируем растяжение на всю ширину экрана */
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;        /* Выталкиваем футер из родительского контейнера */
+    
+    background-color: #111d13;  /* Тёмно-зелёный цвет фона из ваших переменных */
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;     /* Элементы (лого, меню, копирайт) строятся сверху вниз */
+    align-items: center;        /* Центрируем всё содержимое по горизонтали */
+    gap: 32px;                  /* Равномерные отступы между блоками */
+    box-sizing: border-box;
+}
 
+/* Картинка хмеля (логотип) */
+.footer__hops-logo {
+    max-width: 280px;           /* Ограничиваем максимальный размер на мобильных */
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Навигация внутри футера */
+.footer__nav {
+    width: 100%;
+    max-width: 600px;           /* Ограничиваем ширину меню */
+}
+
+.footer__nav ul {
+    list-style: none;           /* Убираем маркеры списков */
+    margin: 0;
+    padding: 0;                 /* Сбрасываем дефолтный отступ браузера */
+    display: flex;
+    flex-wrap: wrap;            /* РАЗРЕШАЕМ перенос ссылок на новый ряд */
+    justify-content: center;    /* Центрируем ссылки */
+    gap: 20px 32px;             /* Отступы между ссылками (вертикальный и горизонтальный) */
+}
+
+.footer__nav a {
+    font-size: 16px;
+    font-weight: 500;
+    color: #f5f5f5;             /* Светлый текст на тёмном фоне (var(--white-text)) */
+    transition: opacity 0.2s ease;
+    text-decoration: none;
+}
+
+.footer__nav a:hover {
+    opacity: 0.8;
+}
+
+/* Копирайт */
+.footer__copyright {
+    font-size: 14px;
+    color: #757575;             /* Серый текст (var(--grey-text)) */
+    text-align: center;
+    margin-top: 16px;
+}
+
+/* 📱 Специфичный фикс для очень узких экранов (мобильные телефоны) */
+@media (max-width: 480px) {
+    footer {
+        padding: 32px 16px;
+        gap: 24px;
+    }
+
+    .footer__nav ul {
+        flex-direction: column; /* На маленьких телефонах строим ссылки в один столбик */
+        align-items: center;
+        gap: 16px;
+    }
+}
