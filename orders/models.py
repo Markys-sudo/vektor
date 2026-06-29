@@ -63,9 +63,11 @@ class OrderItem(models.Model):
 
     @property
     def subtotal(self):
+        if self.price is None:
+            return 0
         return self.price * self.quantity
-    
-    
+
+
 class CartItem(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

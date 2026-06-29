@@ -1,9 +1,9 @@
 from django.views.generic import DetailView
 from django_filters.views import FilterView
-
+from django.views import View
 from .filters import ProductFilter
 from .models import Category, Product
-from orders.cart import Cart
+from reviews.views import ReviewMixin
 
 
 class ProductListView(FilterView):
@@ -31,7 +31,7 @@ class ProductListView(FilterView):
         return ctx
 
 
-class ProductDetailView(DetailView):
+class ProductDetailView(ReviewMixin, DetailView):
     template_name = "products/product_detail.html"
     context_object_name = "product"
 
@@ -42,19 +42,3 @@ class ProductDetailView(DetailView):
             .select_related("category")
             .prefetch_related("reviews__user")
         )
-
-    def get_context_data(self, **kwargs):
-        from reviews.forms import ReviewForm
-        from reviews.services import has_purchased
-        
-        context = super().get_context_data(**kwargs)
-            
-        user = self.request.user
-        product = self.object
-        if user.is_authenticated:
-            context["can_review"] = has_purchased(user, product)
-        else:
-            context["can_review"] = False
-        context["review_form"] = ReviewForm()
-        
-        return context

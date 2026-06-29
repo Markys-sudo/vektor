@@ -4,129 +4,164 @@
 {% block content %}
 <main class="page-product">
     <div class="container">
+        
         <!-- Product Info Section -->
-
         <section class="product-details-section">
             <!-- IMAGE -->
             <div class="product-image-container">
-
                 {% if product.image %}
-                    <img src="{{ product.image.url }}"
-                        alt="{{ product.name }}"
-                        class="product-image">
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
                 {% else %}
-                    <img src="{% static 'img/no-image.jpg' %}"
-                        alt="{{ product.name }}"
-                        class="product-image">
+                    <img src="{% static 'img/no-image.jpg' %}" alt="{{ product.name }}" class="product-image">
                 {% endif %}
-
             </div>
 
             <!-- INFO -->
             <div class="product-info-column">
-
                 <div class="product-title-price">
-
-                <h1 class="product-name">{{ product.name }}</h1>
-
-                <div class="price-section">
-                    <span class="price-tag">per 100g</span>
-                    <p class="product-price">${{ product.price }}</p>
+                    <h1 class="product-name">{{ product.name }}</h1>
+                    <div class="price-section">
+                        <span class="price-tag">per 100g</span>
+                        <p class="product-price">${{ product.price }}</p>
+                    </div>
                 </div>
 
+                <!-- DESCRIPTION -->
+                <div class="product-description">
+                    {{ product.description|linebreaks }}
+                </div>
+
+                <!-- CART -->
+                <div class="cart-controls">
+                    <form action="{% url 'orders:cart_add' product.id %}" method="post" class="add-to-cart-form">
+                        {% csrf_token %}
+                        <button class="button button--primary add-to-cart-button" type="submit">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span>
+                                {% if cart_quantity %}
+                                    {{ cart_quantity }} in cart
+                                {% else %}
+                                    Add to Cart
+                                {% endif %}
+                            </span>
+                        </button>
+                    </form>
+
+                    <div class="quantity-counter is-hidden" id="quantity-counter">
+                        <button class="quantity-btn" data-action="decrease">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <span class="quantity-value">1 in cart</span>
+                        <button class="quantity-btn" data-action="increase">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
+        </section>
+
+        <!-- REVIEWS SECTION -->
+        <section class="reviews-section">
+            
+            <!-- Форма отображается только если товар куплен и отзыв еще не оставлен -->
+            {% if can_review %}
+                <div class="add-review-section">
+                    <h3 class="add-review-title">Leave a Review</h3>
+                    
+                    <form method="post" class="custom-review-form" action="">
+                        {% csrf_token %}
+                        
+                        <!-- ОТОБРАЖЕНИЕ ОШИБОК ВАЛИДАЦИИ -->
+                        {% if review_form.errors %}
+                            <div class="review-errors-container">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <div class="errors-list">
+                                    {% for field, errors in review_form.errors.items %}
+                                        <p class="error-item"><strong>{{ field|capfirst }}:</strong> {{ errors|striptags }}</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- ПОЛЕ ОЦЕНКИ -->
+                        <div class="form-field-group">
+                            <label class="form-field-label" for="{{ review_form.rating.id_for_label }}">
+                                <i class="fa-solid fa-star-half-stroke"></i> Your Rating (1-5)
+                            </label>
+                            <div class="input-wrapper rating-input-wrapper">
+                                {{ review_form.rating }}
+                            </div>
+                        </div>
+
+                        <!-- ПОЛЕ КОММЕНТАРИЯ -->
+                        <div class="form-field-group">
+                            <label class="form-field-label" for="{{ review_form.comment.id_for_label }}">
+                                <i class="fa-solid fa-pen"></i> Your Comment
+                            </label>
+                            <div class="input-wrapper">
+                                {{ review_form.comment }}
+                            </div>
+                        </div>
+
+                        <!-- КНОПКА ОТПРАВКИ -->
+                        <button type="submit" class="button button--secondary submit-review-btn">
+                            <i class="fa-solid fa-paper-plane"></i> Submit Review
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+
+           <!-- REVIEWS SECTION -->
+        <section class="reviews-section">
+            
+            <!-- Форма отправки (остается без изменений) -->
+            {% if can_review %}
+                <div class="add-review-section">
+                    <!-- ... код формы ... -->
+                </div>
+            {% endif %}
+
+            <!-- ИСПРАВЛЕНО: Блок с заголовком и списком показывается ТОЛЬКО если есть отзывы -->
+            {% if reviews %}
+                <h2 class="reviews-title">Latest reviews</h2>
+                
+                <div class="reviews-grid">
+                    {% for review in reviews %}
+                        <div class="review-card">
+                            <!-- ЗВЕЗДЫ НА ОСНОВЕ ОЦЕНКИ -->
+                            <div class="review-rating">
+                                {% with ''|center:review.rating as range %}
+                                    {% for _ in range %}
+                                        <i class="fa-solid fa-star"></i>
+                                    {% endfor %}
+                                {% endwith %}
+                            </div>
+                            
+                            <div class="review-body">
+                                <h4 class="review-heading">
+                                    {% if review.title %}{{ review.title }}{% else %}Review by {{ review.user.username }}{% endif %}
+                                </h4>
+                                <p class="review-text">
+                                    {{ review.comment|linebreaksbr }}
+                                </p>
+                            </div>
+                            
+                            <div class="review-author">
+                                {% if review.user.avatar %}
+                                    <img src="{{ review.user.avatar.url }}" alt="User avatar" class="author-avatar">
+                                {% else %}
+                                    <img src="{% static 'img/avatars/avatar1.svg' %}" alt="User avatar" class="author-avatar">
+                                {% endif %}
+                                <span class="author-name">{{ review.user.username }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %} <!-- ИСПРАВЛЕНО: Конец проверки наличия отзывов -->
+
+        </section>
 
 
-    <!-- DESCRIPTION -->
-    <div class="product-description">
-      {{ product.description|linebreaks }}
     </div>
-
-
-    <!-- CART -->
-    <div class="cart-controls">
-
-    <form 
-        action="{% url 'orders:cart_add' product.id %}" 
-        method="post">
-
-        {% csrf_token %}
-
-<form action="{% url 'orders:cart_add' product.id %}" method="post">
-    {% csrf_token %}
-    <button class="button button--primary add-to-cart-button"type="submit">
-        <i class="fa-solid fa-cart-shopping"></i>
-            <span>
-                {% if cart_quantity %}
-                {{ cart_quantity }} in cart
-                {% else %}
-                Add to Cart
-                {% endif %}
-            </span>
-    </button>
-</form>
-
-      <div class="quantity-counter is-hidden" id="quantity-counter">
-        <button class="quantity-btn" data-action="decrease">
-          <i class="fa-solid fa-minus"></i>
-        </button>
-
-        <span class="quantity-value">1 in cart</span>
-
-        <button class="quantity-btn" data-action="increase">
-          <i class="fa-solid fa-plus"></i>
-        </button>
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-
-
-<!-- 💥 REVIEWS OUTSIDE PRODUCT SECTION -->
-<section class="reviews-section">
-
-    <h2>Reviews</h2>
-
-    {% if can_review %}
-        <form method="post" class="review-form">
-            {% csrf_token %}
-
-            {{ review_form.rating }}
-            {{ review_form.comment }}
-
-            <button type="submit">Submit review</button>
-        </form>
-    {% endif %}
-
-
-    <div class="reviews-list">
-
-        {% for review in reviews %}
-
-            <div class="review-card">
-
-                <h3>{{ review.user.username }}</h3>
-
-                <p class="review-rating">
-                    Rating: {{ review.rating }}/5
-                </p>
-
-                <p class="review-comment">
-                    {{ review.comment }}
-                </p>
-
-            </div>
-
-        {% empty %}
-            <p>No reviews yet</p>
-        {% endfor %}
-
-    </div>
-
-</section>
 </main>
-
 {% endblock %}

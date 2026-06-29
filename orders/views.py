@@ -91,4 +91,4 @@ class CheckoutView(LoginRequiredMixin, View):
 
         cart.clear()
         messages.success(request, f"Заказ #{order.pk} оформлен!")
-        return redirect("users:order_history")
+        return redirect("accounts:order_history")

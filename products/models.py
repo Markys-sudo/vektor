@@ -1,7 +1,7 @@
 """Catalog models: categories and products."""
 from django.db import models
-from django.db.models import Avg, Count, Q
-
+from django.db.models import Avg, Count, Q, Value
+from django.db.models.functions import Coalesce
 from .imaging import to_webp
 
 
@@ -37,7 +37,8 @@ class ProductQuerySet(models.QuerySet):
 
     def with_rating(self) -> "ProductQuerySet":
         return self.annotate(
-            avg_rating=Avg("reviews__rating"),
+            # Если отзывов нет, вместо None запишется 0.0
+            avg_rating=Coalesce(Avg("reviews__rating"), Value(0.0), output_field=models.FloatField()),
             reviews_count=Count("reviews", distinct=True),
         )
 

@@ -1,7 +1,6 @@
 from datetime import timedelta
 from pathlib import Path
 import environ
-import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -125,10 +124,6 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://redis:6379/0")
-CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://redis:6379/1")
-CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
-
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -148,3 +143,14 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
 }
+
+# Настройки Celery для локальной разработки (в памяти)
+# Фикс для Celery (с префиксом)
+CELERY_BROKER_URL = "memory://"
+CELERY_RESULT_BACKEND = "cache+memory://"
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
+
+# Фикс для старых модулей Kombu (без префикса)
+BROKER_URL = "memory://"
+CELERY_BROKER_TRANSPORT = "memory"

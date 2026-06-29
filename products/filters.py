@@ -21,7 +21,7 @@ class ProductFilter(django_filters.FilterSet):
             ("price", "price"),
             ("created_at", "created_at"),
             ("orders_count", "popular"),
-            ("avg_rating", "rating"),
+            ("-avg_rating", "rating"),
         ),
         field_labels={
             "price": "Ціна",

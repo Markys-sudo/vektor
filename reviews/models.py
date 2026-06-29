@@ -1,6 +1,7 @@
 from django.db import models
 from products.models import Product
 
+
 class Review(models.Model):
     product = models.ForeignKey(
         Product,
@@ -23,8 +24,6 @@ class Review(models.Model):
                 name="uniq_product_user_review"
             )
         ]
-        
 
     def __str__(self):
         return f"Review for {self.product.name} - Rating: {self.rating}"
-  

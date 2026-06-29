@@ -31,6 +31,11 @@ CACHES = {
     }
 }
 
+
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://redis:6379/0")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://redis:6379/1")
+CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
+
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = env("EMAIL_HOST", default="") 
 EMAIL_PORT = env.int("EMAIL_PORT", default=587) 
