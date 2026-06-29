@@ -16,7 +16,6 @@
 ### Asynchronous Stack (Очередь задач)
 * **Task Queue:** Celery 5.6+
 * **Message Broker & Backend:** Redis 8.0+
-* **Process Management:** Billiard & Kombu
 
 ### Infrastructure & Security
 * **Web Server:** Nginx 1.25 (Alpine) — выступает как Reverse Proxy, разгружает Django и самостоятельно раздает статические/медиа файлы.
@@ -87,12 +86,8 @@ docker compose exec web python manage.py createsuperuser
 
 Благодаря интеграции `drf-spectacular`, схема API генерируется автоматически. После запуска проекта вы можете получить доступ к интерактивной документации по следующим адресам:
 
-* **Swagger UI:** `http://localhost:8000/api/schema/swagger-ui/`
-* **Redoc:** `http://localhost:8000/api/schema/redoc/`
+* **Swagger UI:** `http://localhost:8000/api/docs/`
 * **Raw OpenAPI Schema (YAML/JSON):** `http://localhost:8000/api/schema/`
-
-### Авторизация
-Доступ к защищенным эндпоинтам осуществляется по схеме **Bearer JWT**. Токены обновляются через эндпоинты аутентификации (например, `/api/token/` и `/api/token/refresh/`).
 
 ---
 
