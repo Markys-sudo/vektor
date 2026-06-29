@@ -28,7 +28,9 @@ def create_order(*, user: User, lines: list[CartLine], shipping_address: str) ->
         raise ValueError("Cannot create an order with no items.")
 
     product_ids = [line.product_id for line in lines]
-    locked = Product.objects.select_for_update().filter(id__in=product_ids, is_active=True)
+    locked = Product.objects.select_for_update().filter(
+        id__in=product_ids, is_active=True
+    )
     products = {p.id: p for p in locked}
 
     order = Order.objects.create(
@@ -59,11 +61,16 @@ def create_order(*, user: User, lines: list[CartLine], shipping_address: str) ->
     order.total_price = total
     order.save(update_fields=["total_price"])
     logger.info(
-        "order_created id=%s user=%s items=%s total=%s", order.pk, user.pk, len(lines), total
+        "order_created id=%s user=%s items=%s total=%s",
+        order.pk,
+        user.pk,
+        len(lines),
+        total,
     )
 
     transaction.on_commit(lambda: send_order_confirmation.delay(order.id))
     return order
+
 
 @transaction.atomic
 def mark_paid(order: Order) -> Order:

@@ -30,6 +30,8 @@ class OrderAdmin(admin.ModelAdmin):
 
         extra_context = extra_context or {}
         paid = Order.objects.filter(status=Order.Status.PAID)
-        extra_context["revenue"] = paid.aggregate(total=Sum("total_price"))["total"] or 0
+        extra_context["revenue"] = (
+            paid.aggregate(total=Sum("total_price"))["total"] or 0
+        )
         extra_context["orders_total"] = Order.objects.count()
         return super().changelist_view(request, extra_context=extra_context)

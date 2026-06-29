@@ -9,6 +9,4 @@ urlpatterns = [
     path("me/orders/", MeOrderView.as_view(), name="me-orders"),
     path("telegram-link/", TelegramLinkAPIView.as_view(), name="api_tg_link"),
     path("telegram/confirm/", TelegramConfirmAPIView.as_view(), name="api_tg_confirm"),
-
 ]
-

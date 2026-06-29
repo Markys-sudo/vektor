@@ -5,14 +5,12 @@ from .models import Product
 from .serializers import ProductSerializer
 from .filters import ProductFilter
 
-    
+
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Product.objects.all().annotate(
-        avg_rating=Avg("reviews__rating"),
-        reviews_count=Count("reviews")
+        avg_rating=Avg("reviews__rating"), reviews_count=Count("reviews")
     )
     serializer_class = ProductSerializer
     filterset_class = ProductFilter
     search_fields = ["name", "description"]
     ordering_fields = ["price", "created_at", "orders_count", "avg_rating"]
-    

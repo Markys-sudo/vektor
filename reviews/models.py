@@ -4,24 +4,19 @@ from products.models import Product
 
 class Review(models.Model):
     product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
-        related_name="reviews"
+        Product, on_delete=models.CASCADE, related_name="reviews"
     )
     user = models.ForeignKey(
-        "users.User",
-        on_delete=models.CASCADE,
-        related_name="reviews"
+        "users.User", on_delete=models.CASCADE, related_name="reviews"
     )
     rating = models.PositiveIntegerField()
     comment = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["product", "user"],
-                name="uniq_product_user_review"
+                fields=["product", "user"], name="uniq_product_user_review"
             )
         ]
 

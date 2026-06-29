@@ -1,0 +1,87 @@
+from decimal import Decimal
+from django.test import TestCase
+from django.urls import reverse
+from django.contrib.auth import get_user_model
+from products.models import Product, Category
+from reviews.models import Review
+from orders.models import Order, OrderItem
+
+User = get_user_model()
+
+class ReviewIntegrationTestCase(TestCase):
+    def setUp(self):
+        """Подготовка данных: юзеры, товар и структура заказов."""
+        self.category = Category.objects.create(name="Hops", slug="hops")
+        self.product = Product.objects.create(
+            name="Mosaic Hops",
+            slug="mosaic-hops",
+            price=Decimal("15.50"),
+            category=self.category,
+            stock=10,
+            is_active=True
+        )
+        
+        # Покупатель (тот, кто оплатил заказ)
+        self.buyer = User.objects.create_user(username="buyer", password="password123")
+        
+        # Обычный посетитель (ничего не покупал)
+        self.visitor = User.objects.create_user(username="visitor", password="password123")
+
+        # Создаем для покупателя оплаченный заказ, чтобы функция has_purchased вернула True
+        # (Настройте поля статуса под вашу реальную логику, например статус PAID)
+        self.order = Order.objects.create(user=self.buyer, status=Order.Status.PAID)
+        OrderItem.objects.create(order=self.order, product=self.product, quantity=1, price=self.product.price)
+
+        # URL страницы товара, куда отправляется POST-запрос с отзывом
+        self.detail_url = reverse("products:product_detail", kwargs={"slug": self.product.slug})
+
+    def test_buyer_can_leave_review_success(self):
+        """Тест: Покупатель может успешно оставить отзыв, после чего форма исчезает."""
+        self.client.login(username="buyer", password="password123")
+        
+        # Имитируем отправку формы отзыва
+        response = self.client.post(self.detail_url, data={
+            "rating": 5,
+            "comment": "Perfect hops for my craft beer!"
+        })
+
+        # Проверяем редирект (код 302) на эту же страницу товара после успешного сохранения
+        self.assertEqual(response.status_code, 302)
+        
+        # Проверяем, что отзыв физически создался в базе данных
+        self.assertEqual(Review.objects.count(), 1)
+        review = Review.objects.first()
+        self.assertEqual(review.rating, 5)
+        self.assertEqual(review.user, self.buyer)
+
+        # Делаем повторный GET-запрос на страницу товара
+        response = self.client.get(self.detail_url)
+        # Проверяем, что форма для этого юзера ИСЧЕЗЛА (can_review стал False)
+        self.assertFalse(response.context["can_review"])
+
+    def test_visitor_cannot_leave_review(self):
+        """Тест: Обычный посетитель (не покупавший товар) блокируется бэкендом."""
+        self.client.login(username="visitor", password="password123")
+        
+        # Пытаемся отправить отзыв
+        self.client.post(self.detail_url, data={
+            "rating": 4,
+            "comment": "I want to try it"
+        })
+
+        # Проверяем, что отзыв НЕ создался в базе данных
+        self.assertEqual(Review.objects.count(), 0)
+
+    def test_cannot_leave_duplicate_review(self):
+        """Тест: Защита бэкенда от отправки второго отзыва подряд."""
+        self.client.login(username="buyer", password="password123")
+        
+        # Отправляем первый отзыв
+        self.client.post(self.detail_url, data={"rating": 5, "comment": "First!"})
+        self.assertEqual(Review.objects.count(), 1)
+
+        # Пытаемся отправить второй отзыв на тот же товар
+        self.client.post(self.detail_url, data={"rating": 1, "comment": "Second text!"})
+        
+        # Проверяем, что количество отзывов осталось равным 1 (второй заблокирован)
+        self.assertEqual(Review.objects.count(), 1)

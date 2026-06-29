@@ -7,6 +7,6 @@ def has_purchased(user, product):
 
     return OrderItem.objects.filter(
         order__user=user,
-        order__status=Order.Status.PAID,   # або DELIVERED (краще)
-        product=product
+        order__status=Order.Status.PAID,  # або DELIVERED (краще)
+        product=product,
     ).exists()

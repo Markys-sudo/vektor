@@ -1,6 +1,5 @@
 from django.views.generic import DetailView
 from django_filters.views import FilterView
-from django.views import View
 from .filters import ProductFilter
 from .models import Category, Product
 from reviews.views import ReviewMixin
@@ -24,9 +23,9 @@ class ProductListView(FilterView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        
+
         ctx["categories"] = Category.objects.all()
-        
+
         ctx["selected_categories"] = self.request.GET.getlist("category")
         return ctx
 

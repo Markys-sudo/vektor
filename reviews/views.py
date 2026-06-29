@@ -12,9 +12,7 @@ class ReviewMixin:
         ctx = super().get_context_data(**kwargs)
         product = self.object
         # Загружаем отзывы для отображения в шаблоне
-        ctx["reviews"] = product.reviews.select_related("user").order_by(
-            "-created_at"
-        )
+        ctx["reviews"] = product.reviews.select_related("user").order_by("-created_at")
         user = self.request.user
         ctx["can_review"] = (
             user.is_authenticated
@@ -54,4 +52,3 @@ class ReviewMixin:
         ctx = self.get_context_data()
         ctx["review_form"] = form
         return self.render_to_response(ctx)
-

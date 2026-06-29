@@ -15,21 +15,23 @@ class Cart:
         self.request = request
         self.user = request.user
         self.is_authenticated = self.user.is_authenticated
-        
+
         # Если гость, инициализируем простую сессию {product_id: quantity}
         if not self.is_authenticated:
             if CART_SESSION_KEY not in self.request.session:
                 self.request.session[CART_SESSION_KEY] = {}
             self.session_cart = self.request.session[CART_SESSION_KEY]
 
-    def add(self, product: Product, quantity: int = 1, *, replace: bool = False) -> CartItem | None:
+    def add(
+        self, product: Product, quantity: int = 1, *, replace: bool = False
+    ) -> CartItem | None:
         if self.is_authenticated:
             # --- ЛОГИКА ДЛЯ БАЗЫ ДАННЫХ ---
             with transaction.atomic():
                 item, created = CartItem.objects.select_for_update().get_or_create(
                     user=self.user,
                     product=product,
-                    defaults={"quantity": 1, "total_price": product.price}
+                    defaults={"quantity": 1, "total_price": product.price},
                 )
 
                 if replace:
@@ -54,7 +56,7 @@ class Cart:
             # --- ЛОГИКА ДЛЯ СЕССИИ (Храним только ID: quantity) ---
             product_id = str(product.id)
             current_quantity = self.session_cart.get(product_id, 0)
-            
+
             new_quantity = quantity if replace else current_quantity + quantity
 
             if new_quantity > product.stock:
@@ -69,33 +71,35 @@ class Cart:
             self.save_session()
             return None
 
-
     def set_quantity(self, product: Product, quantity: int) -> CartItem | None:
         if quantity <= 0:
             self.remove(product)
             return None
         return self.add(product, quantity, replace=True)
-    
+
     def remove(self, product: Product) -> None:
         if self.is_authenticated:
             CartItem.objects.filter(user=self.user, product=product).delete()
         else:
             self.session_cart.pop(str(product.id), None)
             self.save_session()
-            
+
     def clear(self) -> None:
         if self.is_authenticated:
             CartItem.objects.filter(user=self.user).delete()
         else:
             self.request.session.pop(CART_SESSION_KEY, None)
-            self.save_session()    
-    
+            self.save_session()
+
     def save_session(self) -> None:
         self.request.session.modified = True
 
     def merge_session_cart(self) -> None:
         """Переносит легковесную корзину из сессии в БД после авторизации."""
-        if not self.request.user.is_authenticated or CART_SESSION_KEY not in self.request.session:
+        if (
+            not self.request.user.is_authenticated
+            or CART_SESSION_KEY not in self.request.session
+        ):
             return
 
         session_cart = self.request.session[CART_SESSION_KEY]
@@ -115,14 +119,14 @@ class Cart:
                     user=self.request.user,
                     product=product,
                     defaults={
-                        "quantity": session_quantity, 
-                        "total_price": product.price * session_quantity
-                    }
+                        "quantity": session_quantity,
+                        "total_price": product.price * session_quantity,
+                    },
                 )
-                
+
                 if not created:
                     new_quantity = item.quantity + session_quantity
-                    
+
                     if new_quantity > product.stock:
                         new_quantity = product.stock
 
@@ -142,18 +146,22 @@ class Cart:
         """Возвращает генератор словарей для удобного цикла во views и шаблонах."""
         if self.is_authenticated:
             # Для авторизованных тянем данные из БД (с оптимизацией select_related)
-            items = CartItem.objects.filter(user=self.user).select_related("product").order_by("id")
+            items = (
+                CartItem.objects.filter(user=self.user)
+                .select_related("product")
+                .order_by("id")
+            )
             for item in items:
                 yield {
                     "product": item.product,
                     "quantity": item.quantity,
-                    "subtotal": item.total_price
+                    "subtotal": item.total_price,
                 }
         else:
             # Для гостей собираем данные «на лету» по ID из сессии
             product_ids = list(self.session_cart.keys())
             products_map = Product.objects.in_bulk(product_ids)
-            
+
             for product_id, qty in self.session_cart.items():
                 product = products_map.get(int(product_id))
                 if not product:
@@ -161,7 +169,7 @@ class Cart:
                 yield {
                     "product": product,
                     "quantity": qty,
-                    "subtotal": product.price * qty
+                    "subtotal": product.price * qty,
                 }
 
     def __len__(self) -> int:
@@ -186,6 +194,6 @@ class Cart:
             product_ids = list(self.session_cart.keys())
             products_map = Product.objects.in_bulk(product_ids)
             return sum(
-                (p.price * self.session_cart[str(p.id)] for p in products_map.values()), 
-                Decimal("0.00")
+                (p.price * self.session_cart[str(p.id)] for p in products_map.values()),
+                Decimal("0.00"),
             )

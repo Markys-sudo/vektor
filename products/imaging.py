@@ -8,7 +8,7 @@ from PIL import Image
 
 # Tunable defaults.
 WEBP_QUALITY = 80
-MAX_SIZE = (1600, 1600) 
+MAX_SIZE = (1600, 1600)
 
 
 def to_webp(

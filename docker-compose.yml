@@ -1,4 +1,4 @@
-# Production-like stack. Set real secrets/EMAIL_* in .env first.
+# Production stack with Nginx & Cloudflare Tunnel
 services:
   db:
     image: postgres:16
@@ -34,15 +34,32 @@ services:
       DJANGO_SETTINGS_MODULE: config.settings.prod
     env_file:
       - .env
-    ports:
-      - "8000:8000"
+    # ИСПРАВЛЕНО: Порт наружу больше открывать не нужно, Nginx сам все заберет внутри сети Docker
     expose:
       - "8000"
+    volumes:
+      - .:/app
+      - media_data:/app/media
+      - static_data:/app/staticfiles
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  # ДОБАВЛЕНО: Сервис Nginx в качестве единой точки входа
+  nginx:
+    # Заменяем image на build
+    build: ./nginx
+    ports:
+      - "8000:80"
+    volumes:
+      # Строку с конфигом УДАЛЯЕМ. Оставляем только статику и медиа:
+      - media_data:/app/media:ro
+      - static_data:/app/staticfiles:ro
+    depends_on:
+      - web
+
 
   worker:
     build: .
@@ -51,6 +68,9 @@ services:
       DJANGO_SETTINGS_MODULE: config.settings.prod
     env_file:
       - .env
+    volumes:
+      - .:/app
+      - media_data:/app/media
     depends_on:
       db:
         condition: service_healthy
@@ -62,7 +82,9 @@ services:
     command: tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     restart: unless-stopped
     depends_on:
-      - web
+      - nginx  # ИСПРАВЛЕНО: Туннель теперь стучится напрямую в Nginx
 
 volumes:
   postgres_data:
+  media_data:
+  static_data:

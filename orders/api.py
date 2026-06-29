@@ -15,8 +15,7 @@ class OrderViewSet(
     mixins.RetrieveModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
-    ):
-
+):
     permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_queryset(self):
@@ -40,9 +39,9 @@ class OrderViewSet(
         order = self.get_object()
         if order.status not in CANCELLABLE:
             return Response(
-                {"detail": "Нельзя отменить этот заказ."}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Нельзя отменить этот заказ."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         order.status = Order.Status.CANCELLED
         order.save(update_fields=["status"])
         return Response(OrderSerializer(order).data)
-

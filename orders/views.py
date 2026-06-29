@@ -5,7 +5,7 @@ from django.views import View
 
 from products.models import Product
 
-from .cart import Cart  
+from .cart import Cart
 from .exceptions import OutOfStockError
 from .forms import CheckoutForm
 from .services import CartLine, create_order
@@ -33,8 +33,8 @@ def cart_update(request, product_id):
     # ПРОВЕРКА: Если запрошено больше, чем есть на складе
     if requested_quantity > product.stock:
         messages.error(
-            request, 
-            f"Недостатньо залишку для «{product.name}». Доступно лише {product.stock} шт."
+            request,
+            f"Недостатньо залишку для «{product.name}». Доступно лише {product.stock} шт.",
         )
         # Принудительно устанавливаем максимально доступное количество
         requested_quantity = product.stock
@@ -59,23 +59,25 @@ class CheckoutView(LoginRequiredMixin, View):
         # ИСПРАВЛЕНО: Используем len(cart), который работает через быстрый SQL-запрос Count/Sum
         if len(cart) == 0:
             return redirect("orders:cart_detail")
-        return render(request, self.template_name, {"cart": cart, "form": CheckoutForm()})
+        return render(
+            request, self.template_name, {"cart": cart, "form": CheckoutForm()}
+        )
 
     def post(self, request):
         cart = Cart(request)
         if len(cart) == 0:
             return redirect("orders:cart_detail")
-            
+
         form = CheckoutForm(request.POST)
         if not form.is_valid():
             return render(request, self.template_name, {"cart": cart, "form": form})
 
         # ИСПРАВЛЕНО: Теперь мы итерируемся прямо по объекту cart (благодаря методу __iter__)
         lines = [
-            CartLine(product_id=item["product"].id, quantity=item["quantity"]) 
+            CartLine(product_id=item["product"].id, quantity=item["quantity"])
             for item in cart
         ]
-        
+
         try:
             order = create_order(
                 user=request.user,

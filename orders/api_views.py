@@ -13,11 +13,12 @@ class CartViewSet(viewsets.GenericViewSet):
     """
     Керування кошиком поточного користувача.
     """
+
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
         """
-        Вказуємо DRF (та Swagger), які серіалізатори використовуються 
+        Вказуємо DRF (та Swagger), які серіалізатори використовуються
         для різних дій (actions).
         """
         if self.action == "create":
@@ -29,30 +30,37 @@ class CartViewSet(viewsets.GenericViewSet):
         cart = Cart(request.user)
         # Використовуємо self.get_serializer замість прямого виклику класу
         serializer = self.get_serializer(cart.items(), many=True)
-        return Response({
-            "items": serializer.data,
-            "total_count": cart.count(),
-            "total_price": str(cart.total_price())
-        })
+        return Response(
+            {
+                "items": serializer.data,
+                "total_count": cart.count(),
+                "total_price": str(cart.total_price()),
+            }
+        )
 
     def create(self, request):
         """Додати товар до кошика або змінити його кількість."""
         # Тепер self.get_serializer автоматично візьме UpdateCartItemSerializer
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
-        product = get_object_or_404(Product, id=serializer.validated_data['product_id'])
+
+        product = get_object_or_404(Product, id=serializer.validated_data["product_id"])
         cart = Cart(request.user)
-        
+
         item = cart.add_to_cart(
-            product, 
-            quantity=serializer.validated_data['quantity'], 
-            replace=serializer.validated_data['replace']
+            product,
+            quantity=serializer.validated_data["quantity"],
+            replace=serializer.validated_data["replace"],
         )
-        
+
         if item is None:
-            return Response({"detail": "Item removed from cart."}, status=status.HTTP_200_OK)
-        return Response(CartItemSerializer(item, context={'request': request}).data, status=status.HTTP_201_CREATED)
+            return Response(
+                {"detail": "Item removed from cart."}, status=status.HTTP_200_OK
+            )
+        return Response(
+            CartItemSerializer(item, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
 
     @action(detail=False, methods=["delete"])
     def clear(self, request):

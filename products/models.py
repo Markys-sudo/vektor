@@ -1,4 +1,5 @@
 """Catalog models: categories and products."""
+
 from django.db import models
 from django.db.models import Avg, Count, Q, Value
 from django.db.models.functions import Coalesce
@@ -38,7 +39,9 @@ class ProductQuerySet(models.QuerySet):
     def with_rating(self) -> "ProductQuerySet":
         return self.annotate(
             # Если отзывов нет, вместо None запишется 0.0
-            avg_rating=Coalesce(Avg("reviews__rating"), Value(0.0), output_field=models.FloatField()),
+            avg_rating=Coalesce(
+                Avg("reviews__rating"), Value(0.0), output_field=models.FloatField()
+            ),
             reviews_count=Count("reviews", distinct=True),
         )
 
@@ -57,7 +60,9 @@ class Product(TimeStampedModel):
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="products")
+    category = models.ForeignKey(
+        Category, on_delete=models.PROTECT, related_name="products"
+    )
     image = models.ImageField(upload_to="products/", blank=True)
     is_active = models.BooleanField(default=True)
     stock = models.PositiveIntegerField(default=0)
@@ -66,7 +71,9 @@ class Product(TimeStampedModel):
 
     class Meta:
         indexes = [
-            models.Index(fields=["is_active", "category"], name="product_active_cat_idx"),
+            models.Index(
+                fields=["is_active", "category"], name="product_active_cat_idx"
+            ),
             models.Index(fields=["price"], name="product_price_idx"),
             models.Index(fields=["-created_at"], name="product_created_idx"),
         ]
