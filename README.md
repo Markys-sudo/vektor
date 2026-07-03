@@ -1,44 +1,44 @@
-# 🚀 Vektor API — Backend Production Stack
+# 🚀 Vektor API — Production стек бекенду
 
-Высокопроизводительный, масштабируемый REST API на базе **Django 6.x** и **Django REST Framework**, полностью контейнеризированный с помощью Docker. Архитектура спроектирована с учетом Production-требований: изоляция компонентов, асинхронная очередь задач, веб-сервер Nginx и защищенный туннель Cloudflare.
+Високопродуктивний, масштабований REST API на базі **Django 6.x** та **Django REST Framework**, повністю контейнеризований за допомогою Docker. Архітектура спроєктована з урахуванням production-вимог: ізоляція компонентів, асинхронна черга задач, вебсервер Nginx і захищений тунель Cloudflare.
 
 ---
 
-## 🛠 Архитектура и Технологический стек
+## 🛠 Архітектура та технологічний стек
 
 ### Core Backend
 * **Framework:** Python 3.11+ / Django 6.0.x / Django REST Framework (DRF) 3.17+
 * **Authentication:** JWT (JSON Web Tokens) через `djangorestframework-simplejwt`
 * **API Documentation:** OpenAPI 3.0 / Swagger UI через `drf-spectacular`
 * **Database:** PostgreSQL 16 (драйвер `psycopg2-binary`)
-* **Environment:** `django-environ` для безопасного управления конфигурацией
+* **Environment:** `django-environ` для безпечного керування конфігурацією
 
-### Asynchronous Stack (Очередь задач)
+### Asynchronous Stack (черга задач)
 * **Task Queue:** Celery 5.6+
 * **Message Broker & Backend:** Redis 8.0+
 
 ### Infrastructure & Security
-* **Web Server:** Nginx 1.25 (Alpine) — выступает как Reverse Proxy, разгружает Django и самостоятельно раздает статические/медиа файлы.
-* **Tunneling:** Cloudflare Tunnel (`cloudflared`) — обеспечивает безопасный доступ к API из интернета без открытия портов хост-машины наружу.
-* **Code Quality:** Ruff & Flake8 для линтинга и форматирования кода.
+* **Web Server:** Nginx 1.25 (Alpine) — виступає як Reverse Proxy, розвантажує Django та самостійно віддає статичні/медіа файли.
+* **Tunneling:** Cloudflare Tunnel (`cloudflared`) — забезпечує безпечний доступ до API з інтернету без відкриття портів хост-машини назовні.
+* **Code Quality:** Ruff & Flake8 для лінтингу та форматування коду.
 
 ---
 
-## 📁 Структура Docker-сервисов (Docker Compose)
+## 📁 Структура Docker-сервісів (Docker Compose)
 
-Проект разделен на изолированные слои внутри внутренней сети Docker:
-1. `db` — СУБД PostgreSQL 16 с автоматической проверкой доступности (`healthcheck`).
-2. `redis` — In-memory брокер для Celery-воркеров.
-3. `web` — Приложение Django (Gunicorn). Порт `8000` скрыт внутри сети Docker.
-4. `nginx` — Единственная точка входа. Проксирует запросы к Django и отдает статику/медиа в режиме *Read-Only* (`:ro`). Локально доступен на порту `8000`.
-5. `worker` — Контейнер Celery для выполнения тяжелых фоновых задач.
-6. `cloudflared` — Пробрасывает трафик из сети Cloudflare напрямую в контейнер `nginx`.
+Проєкт розділений на ізольовані шари всередині внутрішньої мережі Docker:
+1. `db` — СУБД PostgreSQL 16 з автоматичною перевіркою доступності (`healthcheck`).
+2. `redis` — In-memory брокер для Celery-воркерів.
+3. `web` — Додаток Django (Gunicorn). Порт `8000` прихований всередині мережі Docker.
+4. `nginx` — Єдина точка входу. Проксіює запити до Django і віддає статику/медіа в режимі *Read-Only* (`:ro`). Локально доступний на порті `8000`.
+5. `worker` — Контейнер Celery для виконання важких фонових задач.
+6. `cloudflared` — Пробросує трафік з мережі Cloudflare прямо в контейнер `nginx`.
 
 ---
 
-## ⚙️ Настройка окружения (`.env`)
+## ⚙️ Налаштування оточення (`.env`)
 
-Для запуска проекта создайте файл `.env` в корневой директории приложения. Пример заполнения:
+Для запуску проєкту створіть файл `.env` у кореневій директорії додатка. Приклад заповнення:
 
 ```env
 # Django settings
@@ -61,81 +61,116 @@ CLOUDFLARE_TUNNEL_TOKEN=your_cloudflare_tunnel_token_here
 
 ---
 
-## 🚀 Быстрый запуск проекта
+## 🚀 Швидкий запуск проєкту
 
-### 1. Сборка и запуск контейнеров
-Убедитесь, что Docker запущен, и выполните команду в корне проекта:
+### 1. Збірка і запуск контейнерів
+Переконайтесь, що Docker запущений, і виконайте команду в корені проєкту:
 ```bash
 docker compose up -d --build
 ```
-*Команда автоматически соберет образы бэкенда и Nginx, применит миграции базы данных, соберет статические файлы приложения и запустит все сервисы в фоновом режиме.*
+*Команда автоматично збере образи бекенду і Nginx, застосує міграції бази даних, зібрає статичні файли додатка і запустить всі сервіси у фоновому режимі.*
 
-### 2. Проверка статуса работы
+### 2. Перевірка статусу
 ```bash
 docker compose ps
 ```
 
-### 3. Создание учетной записи администратора (Суперпользователь Django)
+### 3. Створення облікового запису адміністратора (Суперкористувач Django)
 ```bash
 docker compose exec web python manage.py createsuperuser
 ```
 
 ---
 
-## 📖 Эндпоинты API и Документация
+## Можливості та їх реалізації
 
-Благодаря интеграции `drf-spectacular`, схема API генерируется автоматически. После запуска проекта вы можете получить доступ к интерактивной документации по следующим адресам:
+| Можливості | Де |
+|-------------|-----|
+| Каталог: фільтр, пошук, сортування, пагінація | `products/filters.py`, `products/views.py` |
+| Сторінка товару, відгук, рейтинг | `products/views.py` (`ProductDetailView`) |
+| Відгук тільки після покупки | `reviews/services.py`, `reviews/views.py` |
+| Кошик на сесії з перевіркою залишків | `orders/cart.py` |
+| Оформлення замовлення (транзакція, блокування складу, фіксація цін) | `orders/services.py` (`create_order`) |
+| Email-push (async) | `orders/tasks.py` |
+| Кабінет: реєстрація, вхід, історія, профіль, зміна паролю | `users/` |
+| Адмінка: фільтри, інлайн, дія, аналітика (виручка/топ) | `*/admin.py` |
+| REST API (товари, замовлення, відгуки) + JWT | `*/api.py`, `config/api_urls.py` |
+| Картинки → WebP при load | `products/imaging.py` |
+| Тести | `tests/` |
+
+## 📖 Ендпоїнти API і документація
+
+Завдяки інтеграції `drf-spectacular`, схема API генерується автоматично. Після запуску проєкту ви можете отримати доступ до інтерактивної документації за такими адресами:
 
 * **Swagger UI:** `http://localhost:8000/api/docs/`
 * **Raw OpenAPI Schema (YAML/JSON):** `http://localhost:8000/api/schema/`
 
 ---
 
-## 🛠 Полезные команды для разработки и администрирования
+## 🛠 Корисні команди для розробки і адміністрування
 
-### Мониторинг логов
-* **Логи всех сервисов в реальном времени:**
+### Моніторинг логів
+* **Логи всіх сервісів в реальному часі:**
   ```bash
-  docker compose logs -f
-  ```
-* **Логи конкретного сервиса (например, Django веб-приложения или Celery):**
+docker compose logs -f
+```
+* **Логи конкретного сервісу (наприклад, Django веб-додатку або Celery):**
   ```bash
-  docker compose logs web -f
-  docker compose logs worker -f
-  ```
+docker compose logs web -f
+docker compose logs worker -f
+```
 
-### Работа с базой данных и миграциями
-* **Создание новых миграций (после изменения моделей):**
+### Робота з базою даних і міграціями
+* **Створення нових міграцій (після зміни моделей):**
   ```bash
-  docker compose exec web python manage.py makemigrations
-  ```
-* **Применение миграций:**
+docker compose exec web python manage.py makemigrations
+```
+* **Застосування міграцій:**
   ```bash
-  docker compose exec web python manage.py migrate
-  ```
+docker compose exec web python manage.py migrate
+```
 
-### Остановка и обслуживание
-* **Остановка контейнеров с сохранением данных в Volumes:**
+### Зупинка і обслуговування
+* **Зупинка контейнерів з збереженням даних у томах:**
   ```bash
-  docker compose down
-  ```
-* **Полная очистка контейнеров и локальных анонимных томов (очистит кэш путей):**
+docker compose down
+```
+* **Повне очищення контейнерів і локальних анонімних томів (очистить кеш шляхів):**
   ```bash
-  docker compose down -v
-  ```
-* **Перезапуск веб-сервера Nginx (например, после обновления `default.conf`):**
+docker compose down -v
+```
+* **Перезавантаження веб-сервера Nginx (наприклад, після оновлення `default.conf`):**
   ```bash
-  docker compose restart nginx
-  ```
+docker compose restart nginx
+```
 
 ---
 
-## 🛡 Качество кода (Linting)
-Перед отправкой кода в репозиторий рекомендуется проверять проект встроенными линтерами:
-```bash
-# Проверка кода с помощью Ruff
-docker compose exec web ruff check .
+## Структура
 
-# Проверка кода с помощью Flake8
-docker compose exec web flake8 .
 ```
+myshop/
+├── config/            # settings/{base,dev,prod}, urls, api_urls, celery, wsgi/asgi
+├── users/             # кастомний User, auth, кабінет, API реєстрація
+├── products/          # каталог, фільтри, моделі, менеджер, WebP, seed-команда, API
+├── orders/            # кошик, сервіс create_order, замовлення, async email, API
+├── reviews/           # відгуки (web + API), перевірка покупки
+├── templates/         # шаблони (+ admin override для аналітики)
+├── static/ · media/
+├── tests/             # pytest-suite
+├── docker-compose.yml · docker-compose.prod.yml · Dockerfile
+├── requirements.txt · setup.cfg
+└── manage.py
+```
+
+**Індекси — під реальні запити**
+
+| Індекс | Під який запит |
+|--------|------------------|
+| `Product(is_active, category)` | каталог: активні товари категорії |
+| `Product(price)` | фільтр по range та сортування по ціні |
+| `Product(-created_at)` | сортування спочатку нові |
+| `Order(user, status)` | історія замовлення з фільтром по статусу |
+| `Order(user, -created_at)` | історія замовлення користувача |
+| `Order(status, created_at)` | аналітика по статусам/періодам |
+| `Review(product, -created_at)` | список відгуків товару |
