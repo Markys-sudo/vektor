@@ -148,7 +148,6 @@ docker compose restart nginx
 
 ## Структура
 
-```
 myshop/
 ├── config/            # settings/{base,dev,prod}, urls, api_urls, celery, wsgi/asgi
 ├── users/             # кастомний User, auth, кабінет, API реєстрація
@@ -161,6 +160,7 @@ myshop/
 ├── docker-compose.yml · docker-compose.prod.yml · Dockerfile
 ├── requirements.txt · setup.cfg
 └── manage.py
+
 ```
 
 **Індекси — під реальні запити**
